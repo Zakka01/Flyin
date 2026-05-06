@@ -113,18 +113,4 @@ class Graph:
                     else:
                         queue.append((neighbor, path_so_far + [neighbor]))
 
-        # for p in self.paths:
-        #     for key, value in p.items():
-        #         if key == "path":
-        #             lst = []
-        #             for v in value:
-        #                 if not isinstance(v, Connection):
-        #                     lst.append(f"\033[92m{v.name}\033[0m")
-        #                 else:
-        #                     lst.append(f"\033[91m{v.name}\033[0m")
-        #             print("  >>>  ".join(lst))
-        #         else:
-        #             print("->", value)
-        #     print()
-
         return self.paths

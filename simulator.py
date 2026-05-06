@@ -130,7 +130,7 @@ class Simulator:
         if turn_output:
             output_line = " ".join(turn_output)
             self.output.append(output_line)
-            print(f"\033[31m{output_line}\033[0m")
+            # print(f"\033[31m{output_line}\033[0m")
 
         return output_line
 

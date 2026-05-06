@@ -50,6 +50,8 @@ class Render:
         self.minwidth = min(x)
         self.maxheight = max(y)
         self.maxwidth = max(x)
+        print(f"width :{self.minwidth} {self.maxwidth}")
+        print(f"height {self.minheight} {self.maxheight}")
 
     def build_grid(self):
         for y in range(self.minheight, self.maxheight):
@@ -58,8 +60,7 @@ class Render:
                 row.append(Block(y, x))
             self.grid.append(row)
 
-    def draw_zone(self):
-        cell_size = 50
+    def draw_zone(self, cell_size):
 
         grid_width = (self.maxwidth - self.minwidth) * cell_size
         grid_height = (self.maxheight - self.minheight) * cell_size
@@ -67,24 +68,45 @@ class Render:
         offset_x = (1280 - grid_width) // 2
         offset_y = (720 - grid_height) // 2
 
-        margin = 5
+        margin = 10
         rect_size = cell_size - 2 * margin
 
         for zone in self.zones:
             screen_x = offset_x + (zone.x - self.minwidth) * cell_size
             screen_y = offset_y + (zone.y - self.minheight) * cell_size
 
+            if zone.color == "rainbow":
+                zone.color = "red"
+
+            if zone.is_zone_restricted():
+                fill = (220, 77, 1)
+            elif zone.is_zone_blocked():
+                fill = "red"
+            elif zone.is_zone_priority():
+                fill = "green"
+            else:
+                fill = "#DAB1DA"
+
+            # print(zone.color)
             pygame.draw.rect(
                 self.screen,
-                "white",
+                fill,
                 [screen_x, screen_y, rect_size, rect_size],
-                3,
+                0,
+                border_radius=300
+            )
+            pygame.draw.rect(
+                self.screen,
+                zone.color,
+                [screen_x, screen_y, rect_size, rect_size],
+                5,
                 border_radius=300
             )
 
     def play(self):
         running = True
         self.build_grid()
+        cell_size = 75
 
         while running:
             self.clock.tick(60)
@@ -92,10 +114,17 @@ class Render:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        cell_size += 5
+                    if event.key == pygame.K_DOWN and cell_size > 55:
+                        cell_size -= 5
+                    print(cell_size)
 
-            self.screen.fill("black")
+            self.screen.fill((156, 173, 120))
 
-            self.draw_zone()
+            self.draw_zone(cell_size)
+            # self.draw_connection()
 
             pygame.display.flip()
 

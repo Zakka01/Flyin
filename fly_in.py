@@ -41,6 +41,7 @@ class Main:
     def main(self) -> None:
         parser = Parser()
         config = parser.parsing_config()
+        # print(config)
 
         nb_drones = self.get_drones_nb(config)
         graph = Graph(config)

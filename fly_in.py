@@ -63,7 +63,7 @@ class Main:
         zones = graph.get_all_zones()
         connections = graph.build_connection_dict()
 
-        render = Render(zones, connections, graph, drones)
+        render = Render(zones, connections, graph, drones, simulator)
         render.play()
 
 

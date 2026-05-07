@@ -130,55 +130,54 @@ class Simulator:
         if turn_output:
             output_line = " ".join(turn_output)
             self.output.append(output_line)
-            # print(f"\033[31m{output_line}\033[0m")
+            print(f"\033[31m{output_line}\033[0m")
 
         return output_line
 
     def play(self) -> int:
         output = []
-        while not self.is_all_delivered():
-            drones_moves = []
+        # while not self.is_all_delivered():
+        drones_moves = []
 
-            for drone in self.drones:
-                if drone.is_delivered():
-                    continue
+        for drone in self.drones:
+            if drone.is_delivered():
+                continue
 
-                current = drone.current_zone()
+            current = drone.current_zone()
 
-                if isinstance(current, Connection):
+            if isinstance(current, Connection):
+                drones_moves.append({
+                    "current": current,
+                    "drone": drone,
+                    "dst": current.to_dst,
+                    "type": "connection_exit",
+                    "record": True
+                })
+
+            elif drone.can_move():
+                next_item = drone.next_zone()
+
+                if isinstance(next_item, Connection):
                     drones_moves.append({
                         "current": current,
                         "drone": drone,
-                        "dst": current.to_dst,
-                        "type": "connection_exit",
+                        "dst": next_item,
+                        "type": "connection_enter",
                         "record": True
                     })
 
-                elif drone.can_move():
-                    next_item = drone.next_zone()
+                else:
+                    drones_moves.append({
+                        "current": current,
+                        "drone": drone,
+                        "dst": next_item,
+                        "type": "normal_move",
+                        "record": True
+                    })
 
-                    if isinstance(next_item, Connection):
-                        drones_moves.append({
-                            "current": current,
-                            "drone": drone,
-                            "dst": next_item,
-                            "type": "connection_enter",
-                            "record": True
-                        })
+        valid_moves = self.validate_moves(drones_moves)
+        self.apply_moves(valid_moves)
+        output.append(self.record_turn_output(valid_moves))
+        self.turns += 1
 
-                    else:
-                        drones_moves.append({
-                            "current": current,
-                            "drone": drone,
-                            "dst": next_item,
-                            "type": "normal_move",
-                            "record": True
-                        })
-
-            valid_moves = self.validate_moves(drones_moves)
-            self.apply_moves(valid_moves)
-            output.append(self.record_turn_output(valid_moves))
-            self.turns += 1
-
-        print(f"\n{self.turns}")
         return self.turns

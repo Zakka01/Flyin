@@ -6,6 +6,7 @@ from graph import Graph
 from connection import Connection
 from zone import Zone
 from drone import Drone
+from simulator import Simulator
 from typing import List
 import pygame
 
@@ -15,9 +16,11 @@ class Render:
                  zones: List[Zone],
                  connections: dict,
                  graph: Graph,
-                 drones: List[Drone]):
+                 drones: List[Drone],
+                 simulator: Simulator):
 
         self.graph = graph
+        self.simulator = simulator
         self.zones = zones
         self.connections = connections
         self.drones = drones
@@ -175,7 +178,7 @@ class Render:
         thickness = 10
 
         while running:
-            self.clock.tick(60)
+            self.clock.tick(5)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -201,6 +204,8 @@ class Render:
             self.draw_connection(cell_size, padding)
             self.draw_zone(cell_size, padding, thickness)
             self.draw_drone(cell_size, padding, drone_size, thickness)
+
+            self.simulator.play()
 
             pygame.display.flip()
 

@@ -10,103 +10,131 @@ from typing import List
 import pygame
 
 
-class Block:
-
-    def __init__(self, y: int, x: int):
-        """
-            Initialize the attributes :
-            x, y => ofc the coordinates,
-            walls => if the block closed or not
-            checked => if the block already visited or not
-            ...
-        """
-        self.x = x
-        self.y = y
-
-
 class Render:
-    def __init__(self,
-                 zones: List[Zone],
-                 connections: List[Connection]):
+    def __init__(self, zones: List[Zone], connections: dict, graph: Graph):
+        self.graph = graph
         self.zones = zones
         self.connections = connections
+        self.zone_lookup = {z.name: z for z in self.zones}
         self.minheight = 0
         self.maxheight = 0
         self.minwidth = 0
         self.maxwidth = 0
+
         pygame.init()
         self.screen = pygame.display.set_mode((1280, 720))
         self.clock = pygame.time.Clock()
-        self.get_max()
+        self.get_min_max()
+
         self.grid = []
 
-    def get_max(self) -> None:
+    def get_min_max(self) -> None:
         x = []
         y = []
         for zone in self.zones:
             x.append(zone.x)
             y.append(zone.y)
+
         self.minheight = min(y)
         self.minwidth = min(x)
+
         self.maxheight = max(y)
         self.maxwidth = max(x)
-        print(f"width :{self.minwidth} {self.maxwidth}")
-        print(f"height {self.minheight} {self.maxheight}")
 
-    def build_grid(self):
-        for y in range(self.minheight, self.maxheight):
-            row = []
-            for x in range(self.minwidth, self.maxwidth):
-                row.append(Block(y, x))
-            self.grid.append(row)
+    def get_zone_screen_pos(self, zone, cell_size, padding, margin):
 
-    def draw_zone(self, cell_size):
-
-        grid_width = (self.maxwidth - self.minwidth) * cell_size
-        grid_height = (self.maxheight - self.minheight) * cell_size
-
+        grid_width = (self.maxwidth - self.minwidth) * (cell_size + padding)
+        grid_height = (self.maxheight - self.minheight) * (cell_size + padding)
         offset_x = (1280 - grid_width) // 2
         offset_y = (720 - grid_height) // 2
 
+        screen_x = offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
+        screen_y = offset_y + (zone.y - self.minheight) * (cell_size + padding) + margin
+
+        return screen_x, screen_y
+
+    def get_zone_center(self, zone, cell_size, padding, margin):
+
+        screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
+        rect_size = (cell_size + padding) - 2 * margin
+        center_x = screen_x + rect_size // 2
+        center_y = screen_y + rect_size // 2
+        return center_x, center_y
+
+    def draw_zone(self, cell_size, padding, thickness):
         margin = 10
-        rect_size = cell_size - 2 * margin
+        rect_size = (cell_size + padding) - 2 * margin
 
         for zone in self.zones:
-            screen_x = offset_x + (zone.x - self.minwidth) * cell_size
-            screen_y = offset_y + (zone.y - self.minheight) * cell_size
+            screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
 
             if zone.color == "rainbow":
-                zone.color = "red"
+                zone.color = (220, 77, 1)
 
             if zone.is_zone_restricted():
-                fill = (220, 77, 1)
+                fill = "#E78311"
+                center_fill = "#CF5300"
             elif zone.is_zone_blocked():
                 fill = "red"
+                center_fill = "#690000"
             elif zone.is_zone_priority():
-                fill = "green"
+                fill = "#00E479"
+                center_fill = "#00B42D"
+            elif zone.name == self.graph.start_hub.name:
+                fill = "#EA01FF"
+                center_fill = "#72007C"
+            elif zone.name == self.graph.end_hub.name:
+                fill = "#B8AB00"
+                center_fill = "#E5FF00"
             else:
-                fill = "#DAB1DA"
+                center_fill = "#007C8F"
+                fill = "#00A8C2"
 
-            # print(zone.color)
+            # Draw filled circle
+            pygame.draw.rect(
+                self.screen,
+                center_fill,
+                [screen_x, screen_y, rect_size, rect_size],
+                0,
+                border_radius=100
+            )
+            
             pygame.draw.rect(
                 self.screen,
                 fill,
                 [screen_x, screen_y, rect_size, rect_size],
-                0,
-                border_radius=300
+                thickness,
+                border_radius=100
             )
+
+            # Draw border
             pygame.draw.rect(
                 self.screen,
                 zone.color,
                 [screen_x, screen_y, rect_size, rect_size],
-                5,
-                border_radius=300
+                2,
+                border_radius=100
             )
+
+    def draw_connection(self, cell_size, padding):
+        margin = 10
+
+        for zone_name, neighbors in self.connections.items():
+            zone = self.zone_lookup[zone_name]
+            zone_center_x, zone_center_y = self.get_zone_center(zone, cell_size, padding, margin)
+
+            for neighbor_zone, capacity in neighbors:
+                neighbor_center_x, neighbor_center_y = self.get_zone_center(neighbor_zone, cell_size, padding, margin)
+                pygame.draw.line(self.screen, "#6DC5D4",
+                                (zone_center_x, zone_center_y),
+                                (neighbor_center_x, neighbor_center_y),
+                                2)
 
     def play(self):
         running = True
-        self.build_grid()
-        cell_size = 75
+        cell_size = 35
+        padding = 40
+        thickness = 10
 
         while running:
             self.clock.tick(60)
@@ -117,14 +145,18 @@ class Render:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
                         cell_size += 5
-                    if event.key == pygame.K_DOWN and cell_size > 55:
+                        if thickness < 10:
+                            thickness += 2
+                    if event.key == pygame.K_DOWN and cell_size > 0:
                         cell_size -= 5
+                        if thickness > 7:
+                            thickness -= 2
                     print(cell_size)
 
-            self.screen.fill((156, 173, 120))
+            self.screen.fill("#00515E")
 
-            self.draw_zone(cell_size)
-            # self.draw_connection()
+            self.draw_connection(cell_size, padding)
+            self.draw_zone(cell_size, padding, thickness)
 
             pygame.display.flip()
 

@@ -62,8 +62,8 @@ class Main:
 
         zones = graph.get_all_zones()
         connections = graph.build_connection_dict()
-        render = Render(zones, connections)
-        # render.build_grid()
+
+        render = Render(zones, connections, graph)
         render.play()
 
 

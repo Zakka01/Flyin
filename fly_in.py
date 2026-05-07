@@ -18,30 +18,30 @@ class Main:
         selected_paths = all_paths[:2] if len(all_paths) >= 2 else all_paths
 
         # just print the 2 selected paths
-        for p in selected_paths:
-            for key, value in p.items():
-                if key == "path":
-                    lst = []
-                    for v in value:
-                        if not isinstance(v, Connection):
-                            lst.append(f"\033[92m{v.name}\033[0m")
-                        else:
-                            lst.append(f"\033[91m{v.name}\033[0m")
-                    print("  >>>  ".join(lst))
-                else:
-                    print("->", value)
-            print()
+        # for p in selected_paths:
+        #     for key, value in p.items():
+        #         if key == "path":
+        #             lst = []
+        #             for v in value:
+        #                 if not isinstance(v, Connection):
+        #                     lst.append(f"\033[92m{v.name}\033[0m")
+        #                 else:
+        #                     lst.append(f"\033[91m{v.name}\033[0m")
+        #             print("  >>>  ".join(lst))
+        #         else:
+        #             print("->", value)
+        #     print()
 
         for i in range(nb_drones):
             path = selected_paths[i % len(selected_paths)]["path"]
             drone = Drone(f"D{i+1}", path)
             drones.append(drone)
+
         return drones
 
     def main(self) -> None:
         parser = Parser()
         config = parser.parsing_config()
-        # print(config)
 
         nb_drones = self.get_drones_nb(config)
         graph = Graph(config)
@@ -58,12 +58,12 @@ class Main:
                               graph.end_hub,
                               all_zones,
                               connection_dct)
-        simulator.play()
+        # simulator.play()
 
         zones = graph.get_all_zones()
         connections = graph.build_connection_dict()
 
-        render = Render(zones, connections, graph)
+        render = Render(zones, connections, graph, drones)
         render.play()
 
 

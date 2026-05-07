@@ -11,10 +11,16 @@ import pygame
 
 
 class Render:
-    def __init__(self, zones: List[Zone], connections: dict, graph: Graph):
+    def __init__(self,
+                 zones: List[Zone],
+                 connections: dict,
+                 graph: Graph,
+                 drones: List[Drone]):
+
         self.graph = graph
         self.zones = zones
         self.connections = connections
+        self.drones = drones
         self.zone_lookup = {z.name: z for z in self.zones}
         self.minheight = 0
         self.maxheight = 0
@@ -27,6 +33,7 @@ class Render:
         self.get_min_max()
 
         self.grid = []
+        self.camera = [0, 0]
 
     def get_min_max(self) -> None:
         x = []
@@ -56,9 +63,11 @@ class Render:
     def get_zone_center(self, zone, cell_size, padding, margin):
 
         screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
+
         rect_size = (cell_size + padding) - 2 * margin
         center_x = screen_x + rect_size // 2
         center_y = screen_y + rect_size // 2
+
         return center_x, center_y
 
     def draw_zone(self, cell_size, padding, thickness):
@@ -89,29 +98,27 @@ class Render:
             else:
                 center_fill = "#007C8F"
                 fill = "#00A8C2"
-
-            # Draw filled circle
-            pygame.draw.rect(
-                self.screen,
-                center_fill,
-                [screen_x, screen_y, rect_size, rect_size],
-                0,
-                border_radius=100
-            )
             
             pygame.draw.rect(
                 self.screen,
+                center_fill,
+                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
+                0,
+                border_radius=100
+            )
+
+            pygame.draw.rect(
+                self.screen,
                 fill,
-                [screen_x, screen_y, rect_size, rect_size],
+                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
                 thickness,
                 border_radius=100
             )
 
-            # Draw border
             pygame.draw.rect(
                 self.screen,
                 zone.color,
-                [screen_x, screen_y, rect_size, rect_size],
+                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
                 2,
                 border_radius=100
             )
@@ -125,14 +132,45 @@ class Render:
 
             for neighbor_zone, capacity in neighbors:
                 neighbor_center_x, neighbor_center_y = self.get_zone_center(neighbor_zone, cell_size, padding, margin)
-                pygame.draw.line(self.screen, "#6DC5D4",
-                                (zone_center_x, zone_center_y),
-                                (neighbor_center_x, neighbor_center_y),
-                                2)
+                pygame.draw.line(
+                    self.screen, 
+                    "#6DC5D4",
+                    (zone_center_x + self.camera[0], zone_center_y + self.camera[1]),
+                    (neighbor_center_x + self.camera[0], neighbor_center_y + self.camera[1]),
+                    2
+                )
+
+    def draw_drone(self, cell_size, padding, drone_size, thickness):
+        margin = 10
+        rect_size = (cell_size + padding) - 2 * margin
+
+        for drone in self.drones:
+            current = drone.current_zone()
+            screen_x, screen_y = self.get_zone_screen_pos(current, cell_size, padding, margin)
+
+            # Center drone inside zone
+            drone_x = screen_x + (rect_size - drone_size) // 2
+            drone_y = screen_y + (rect_size - drone_size) // 2
+
+            pygame.draw.rect(
+                self.screen,
+                "#FFF38B",
+                [drone_x + 1 + self.camera[0], drone_y + 1 + self.camera[1], drone_size - 2, drone_size - 2],
+                0,
+                border_radius=100
+            )
+            pygame.draw.rect(
+                self.screen,
+                "#FF9100",
+                [drone_x + self.camera[0], drone_y + self.camera[1], drone_size, drone_size],
+                thickness,
+                border_radius=100
+            )
 
     def play(self):
         running = True
         cell_size = 35
+        drone_size = 30
         padding = 40
         thickness = 10
 
@@ -147,16 +185,22 @@ class Render:
                         cell_size += 5
                         if thickness < 10:
                             thickness += 2
+
                     if event.key == pygame.K_DOWN and cell_size > 0:
                         cell_size -= 5
                         if thickness > 7:
                             thickness -= 2
-                    print(cell_size)
+
+                    if event.key == pygame.K_LEFT:
+                        self.camera[0] -= 20
+                    if event.key == pygame.K_RIGHT:
+                        self.camera[0] += 20
 
             self.screen.fill("#00515E")
 
             self.draw_connection(cell_size, padding)
             self.draw_zone(cell_size, padding, thickness)
+            self.draw_drone(cell_size, padding, drone_size, thickness)
 
             pygame.display.flip()
 

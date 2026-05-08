@@ -9,6 +9,7 @@ from drone import Drone
 from simulator import Simulator
 from typing import List
 import pygame
+import random
 
 
 class Render:
@@ -37,6 +38,7 @@ class Render:
 
         self.grid = []
         self.camera = [0, 0]
+        self.drone_colors = {}
 
     def get_min_max(self) -> None:
         x = []
@@ -147,28 +149,51 @@ class Render:
         margin = 10
         rect_size = (cell_size + padding) - 2 * margin
 
+        clear_colors = [
+            "#FF6B6B", "#00BDB0", "#45B7D1", "#AC3100", "#6AFFDA",
+            "#E4B600", "#BB8FCE", "#85C1E2", "#F8B88B", "#346D5B",
+            "#E74C3C", "#0065A8", "#F39C12", "#9B59B6", "#1ABC9C",
+            "#E67E22", "#00866C", "#2ECC71", "#D35400", "#8E44AD"
+        ]
         for drone in self.drones:
+            drone_num = int(drone.id[1:])  # extract number from "D1", "D2", etc
+            self.drone_colors[drone.id] = clear_colors[drone_num % len(clear_colors)]
+
+        for drone in self.drones:
+
             current = drone.current_zone()
+            
+            if isinstance(current, Connection):
+                continue
             screen_x, screen_y = self.get_zone_screen_pos(current, cell_size, padding, margin)
 
             # Center drone inside zone
             drone_x = screen_x + (rect_size - drone_size) // 2
             drone_y = screen_y + (rect_size - drone_size) // 2
 
+            drone_color = self.drone_colors[drone.id]
             pygame.draw.rect(
                 self.screen,
-                "#FFF38B",
+                drone_color,
                 [drone_x + 1 + self.camera[0], drone_y + 1 + self.camera[1], drone_size - 2, drone_size - 2],
                 0,
                 border_radius=100
             )
             pygame.draw.rect(
                 self.screen,
-                "#FF9100",
+                "white",
                 [drone_x + self.camera[0], drone_y + self.camera[1], drone_size, drone_size],
-                thickness,
+                3,
                 border_radius=100
             )
+
+            font = pygame.font.Font(None, 20)
+            text = font.render(drone.id, True, "black")
+            text_rect = text.get_rect(center=(
+                drone_x + drone_size // 2 + self.camera[0],
+                drone_y + drone_size // 2 + self.camera[1]
+            ))
+            self.screen.blit(text, text_rect)
 
     def play(self):
         running = True
@@ -176,37 +201,41 @@ class Render:
         drone_size = 30
         padding = 40
         thickness = 10
+        paused = False
 
         while running:
-            self.clock.tick(5)
+            self.clock.tick(2)  # 2 FPS
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        paused = not paused
+
                     if event.key == pygame.K_UP:
                         cell_size += 5
                         if thickness < 10:
                             thickness += 2
-
                     if event.key == pygame.K_DOWN and cell_size > 0:
                         cell_size -= 5
                         if thickness > 7:
                             thickness -= 2
-
                     if event.key == pygame.K_LEFT:
                         self.camera[0] -= 20
                     if event.key == pygame.K_RIGHT:
                         self.camera[0] += 20
 
-            self.screen.fill("#00515E")
+            # Do ONE step per frame if not paused
+            if not paused and self.simulator.is_running:
+                turns = self.simulator.play()
 
+            self.screen.fill("#003757")
             self.draw_connection(cell_size, padding)
             self.draw_zone(cell_size, padding, thickness)
             self.draw_drone(cell_size, padding, drone_size, thickness)
 
-            self.simulator.play()
-
             pygame.display.flip()
 
+        print(turns)
         pygame.quit()

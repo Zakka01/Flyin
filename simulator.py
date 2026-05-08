@@ -20,6 +20,7 @@ class Simulator:
         self.connections = connection_dict
         self.output = []
         self.turns = 0
+        self.is_running = True
 
     def is_all_delivered(self) -> bool:
         return all(drone.is_delivered() for drone in self.drones)
@@ -130,13 +131,16 @@ class Simulator:
         if turn_output:
             output_line = " ".join(turn_output)
             self.output.append(output_line)
-            print(f"\033[31m{output_line}\033[0m")
+            print(output_line)
 
         return output_line
 
     def play(self) -> int:
         output = []
-        # while not self.is_all_delivered():
+
+        while self.is_all_delivered():
+            self.is_running = False
+
         drones_moves = []
 
         for drone in self.drones:

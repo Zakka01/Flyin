@@ -59,7 +59,6 @@ class Main:
                               all_zones,
                               connection_dct)
         # simulator.play()
-
         zones = graph.get_all_zones()
         connections = graph.build_connection_dict()
 

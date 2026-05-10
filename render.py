@@ -60,8 +60,14 @@ class Render:
         offset_x = (1280 - grid_width) // 2
         offset_y = (720 - grid_height) // 2
 
-        screen_x = offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
-        screen_y = offset_y + (zone.y - self.minheight) * (cell_size + padding) + margin
+        if isinstance(zone, Zone):
+            screen_x = offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
+            screen_y = offset_y + (zone.y - self.minheight) * (cell_size + padding) + margin
+        else:
+            screen_x = (offset_x + (zone.from_dst.x - self.minwidth) * (cell_size + padding) + margin) // 2 + \
+                       (offset_x + (zone.to_dst.x - self.minwidth) * (cell_size + padding) + margin) // 2
+            screen_y = (offset_y + (zone.from_dst.y - self.minheight) * (cell_size + padding) + margin) // 2 + \
+                       (offset_y + (zone.to_dst.y - self.minheight) * (cell_size + padding) + margin) // 2
 
         return screen_x, screen_y
 
@@ -162,9 +168,7 @@ class Render:
         for drone in self.drones:
 
             current = drone.current_zone()
-            
-            if isinstance(current, Connection):
-                continue
+
             screen_x, screen_y = self.get_zone_screen_pos(current, cell_size, padding, margin)
 
             # Center drone inside zone
@@ -197,37 +201,43 @@ class Render:
 
     def play(self):
         running = True
-        cell_size = 35
+        cell_size = 30
         drone_size = 30
         padding = 40
         thickness = 10
         paused = False
+        start = False
 
         while running:
-            self.clock.tick(2)  # 2 FPS
+            self.clock.tick(3)  # 2 FPS
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         paused = not paused
+                    
+                    if event.key == pygame.K_RETURN:
+                        start = True
 
                     if event.key == pygame.K_UP:
                         cell_size += 5
                         if thickness < 10:
                             thickness += 2
+
                     if event.key == pygame.K_DOWN and cell_size > 0:
                         cell_size -= 5
                         if thickness > 7:
                             thickness -= 2
+
                     if event.key == pygame.K_LEFT:
                         self.camera[0] -= 20
                     if event.key == pygame.K_RIGHT:
                         self.camera[0] += 20
 
-            # Do ONE step per frame if not paused
-            if not paused and self.simulator.is_running:
+            if not paused and start and self.simulator.is_running:
                 turns = self.simulator.play()
 
             self.screen.fill("#003757")

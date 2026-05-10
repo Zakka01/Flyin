@@ -22,7 +22,9 @@ class Drone:
     def deliver(self):
         self.status = "delivered"
 
-    def move(self):
+    def move(self, flag: bool = False):
+        if flag:
+            self.status = "waiting"
         self.current_pos += 1
         self.status = "moving"
 

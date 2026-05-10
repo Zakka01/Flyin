@@ -93,18 +93,18 @@ class Simulator:
             move_type = move["type"]
 
             if move_type == "normal_move":
-                drone.move()
+                drone.move(flag=False)
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 dst.drone_in += 1
 
             elif move_type == "connection_enter":
-                drone.move()
+                drone.move(flag=True)
                 dst.drone_in += 1
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 drone.on_connection = True
 
             elif move_type == "connection_exit":
-                drone.move()
+                drone.move(flag=False)
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 dst.drone_in += 1
                 drone.on_connection = False
@@ -138,7 +138,7 @@ class Simulator:
     def play(self) -> int:
         output = []
 
-        while self.is_all_delivered():
+        if self.is_all_delivered():
             self.is_running = False
 
         drones_moves = []

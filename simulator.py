@@ -132,7 +132,7 @@ class Simulator:
             output_line = " ".join(turn_output)
             self.output.append(output_line)
             print(output_line)
-
+            self.turns += 1
         return output_line
 
     def play(self) -> int:
@@ -182,6 +182,5 @@ class Simulator:
         valid_moves = self.validate_moves(drones_moves)
         self.apply_moves(valid_moves)
         output.append(self.record_turn_output(valid_moves))
-        self.turns += 1
 
         return self.turns

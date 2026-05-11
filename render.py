@@ -25,14 +25,17 @@ class Render:
         self.zones = zones
         self.connections = connections
         self.drones = drones
+        self.screen_width = 1350
+        self.screen_height = 800
         self.zone_lookup = {z.name: z for z in self.zones}
+
         self.minheight = 0
         self.maxheight = 0
         self.minwidth = 0
         self.maxwidth = 0
 
         pygame.init()
-        self.screen = pygame.display.set_mode((1280, 720))
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.clock = pygame.time.Clock()
         self.get_min_max()
 
@@ -57,8 +60,8 @@ class Render:
 
         grid_width = (self.maxwidth - self.minwidth) * (cell_size + padding)
         grid_height = (self.maxheight - self.minheight) * (cell_size + padding)
-        offset_x = (1280 - grid_width) // 2
-        offset_y = (720 - grid_height) // 2
+        offset_x = (self.screen_width - grid_width) // 2
+        offset_y = (self.screen_height - grid_height) // 2
 
         if isinstance(zone, Zone):
             screen_x = offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
@@ -90,6 +93,8 @@ class Render:
 
             if zone.color == "rainbow":
                 zone.color = (220, 77, 1)
+            elif zone.color is None:
+                zone.color = (0, 120, 143)
 
             if zone.is_zone_restricted():
                 fill = "#E78311"
@@ -130,7 +135,7 @@ class Render:
                 self.screen,
                 zone.color,
                 [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
-                2,
+                4,
                 border_radius=100
             )
 
@@ -192,7 +197,7 @@ class Render:
             )
 
             font = pygame.font.Font(None, 20)
-            text = font.render(drone.id, True, "black")
+            text = font.render(drone.id, True, "white")
             text_rect = text.get_rect(center=(
                 drone_x + drone_size // 2 + self.camera[0],
                 drone_y + drone_size // 2 + self.camera[1]
@@ -200,23 +205,26 @@ class Render:
             self.screen.blit(text, text_rect)
 
     def play(self):
-        running = True
+
         cell_size = 30
         drone_size = 30
         padding = 40
         thickness = 10
+
+        running = True
         paused = False
         start = False
 
         while running:
-            self.clock.tick(3)  # 2 FPS
+            self.clock.tick(2)  # 2 FPS
 
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+                if event.type == pygame.QUIT or \
+                   (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     running = False
 
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_SPACE and start:
                         paused = not paused
                     
                     if event.key == pygame.K_RETURN:

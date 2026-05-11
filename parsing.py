@@ -1,4 +1,5 @@
 import sys
+import webcolors
 
 
 class Parser:
@@ -71,6 +72,20 @@ class Parser:
                 if key not in ["zone", "color", "max_drones"]:
                     raise ValueError(f"Invalid Metadata Key '{key}'")
 
+                if key == "max_drones":
+                    if int(value) <= 0:
+                        raise ValueError("max_drones must be a positive integer")
+
+                if key == "zone":
+                    if value not in ["normal", "priority", "restricted", "blocked"]:
+                        raise ValueError(f"Invalid zone type '{value}'")
+
+                if key == "color":
+                    try:
+                        hex_code = webcolors.name_to_hex(value)
+                    except ValueError:
+                        hex_code = None
+                    value = hex_code
                 metadata_dict[key] = value
 
         else:
@@ -127,7 +142,7 @@ class Parser:
 
         start_hub = config["start_hub"]["name"]
         end_hub = config["end_hub"]["name"]
-        hubs = config["hub"]
+        hubs = config.get("hub", [])
         connection = config["connection"]
 
         all_hubs = set()
@@ -161,14 +176,19 @@ class Parser:
             if len(sys.argv) == 2:
                 filename = sys.argv[1]
                 with open(filename, "r") as file:
+                    first_line = True
                     for line in file:
                         line = line.strip()
 
                         if line.startswith("#"):
                             continue
 
+
                         elif line == "":
                             continue
+
+                        elif not line.startswith("nb_drones") and first_line is True:
+                            raise ValueError("The first line must be 'nb_drones'")
 
                         elif ":" not in line:
                             raise ValueError("Invalid config line")
@@ -176,17 +196,17 @@ class Parser:
                         else:
                             key, value = line.split(":", 1)
                             key, value = key.lower().strip(), value.strip()
+
                             if not value:
                                 raise ValueError(f"No value given for {key}")
 
                             if key in mandatory_keys and key in config:
-                                raise ValueError(f"{key} should not \
-                                                 be duplicated")
+                                raise ValueError(f"{key} should not be duplicated")
 
                             if key not in mandatory_keys and \
-                               key not in extra_keys:
+                                key not in extra_keys:
                                 raise ValueError(f"Key: '{key}' is not Valid")
-
+                            
                             if "#" in value:
                                 value, comment = value.split("#", 1)
 
@@ -197,12 +217,14 @@ class Parser:
                                 if key not in config:
                                     config[key] = []
                                 config[key].append(value)
+                        first_line = False
 
             else:
                 raise ValueError("No config file given")
 
             if (
                 "nb_drones" not in config
+                or "connection" not in config
                 or "start_hub" not in config
                 or "end_hub" not in config
             ):
@@ -213,10 +235,11 @@ class Parser:
 
             # just making the (start, hub) hubs capable of holding all drones
             valid_config["start_hub"]["max_drones"] = valid_config["nb_drones"]
-            valid_config["end_hub"]["max_drones"] = valid_config["nb_drones"]
+            valid_config["start_hub"]["zone"] = "normal"
 
         except Exception as e:
             print(f"ERROR: {e}")
             sys.exit(0)
 
+        print(valid_config)
         return valid_config

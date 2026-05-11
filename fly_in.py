@@ -13,29 +13,33 @@ class Main:
         return config["nb_drones"]
 
     def assign_path_to_drone(self, nb_drones: int, all_paths: List) -> List:
-        drones = []
+        try:
+            drones = []
 
-        selected_paths = all_paths[:2] if len(all_paths) >= 2 else all_paths
+            selected_paths = all_paths[:2] if len(all_paths) >= 2 else all_paths
 
-        # just print the 2 selected paths
-        # for p in selected_paths:
-        #     for key, value in p.items():
-        #         if key == "path":
-        #             lst = []
-        #             for v in value:
-        #                 if not isinstance(v, Connection):
-        #                     lst.append(f"\033[92m{v.name}\033[0m")
-        #                 else:
-        #                     lst.append(f"\033[91m{v.name}\033[0m")
-        #             print("  >>>  ".join(lst))
-        #         else:
-        #             print("->", value)
-        #     print()
+            # just print the 2 selected paths
+            # for p in selected_paths:
+            #     for key, value in p.items():
+            #         if key == "path":
+            #             lst = []
+            #             for v in value:
+            #                 if not isinstance(v, Connection):
+            #                     lst.append(f"\033[92m{v.name}\033[0m")
+            #                 else:
+            #                     lst.append(f"\033[91m{v.name}\033[0m")
+            #             print("  >>>  ".join(lst))
+            #         else:
+            #             print("->", value)
+            #     print()
 
-        for i in range(nb_drones):
-            path = selected_paths[i % len(selected_paths)]["path"]
-            drone = Drone(f"D{i+1}", path)
-            drones.append(drone)
+            for i in range(nb_drones):
+                path = selected_paths[i % len(selected_paths)]["path"]
+                drone = Drone(f"D{i+1}", path)
+                drones.append(drone)
+        except Exception as e:
+            print(f"Error assigning paths to drones: {e}")
+            exit(0)
 
         return drones
 

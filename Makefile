@@ -3,7 +3,7 @@ MAIN = fly_in.py
 CONFIG = config.txt
 
 install:
-	poetry install
+	python3 -m venv env
 
 run :
 	@$(PYTHON) $(MAIN) $(CONFIG)

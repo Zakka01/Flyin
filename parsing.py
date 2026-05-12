@@ -52,7 +52,7 @@ class Parser:
         metadata_dict = {}
         y = 0
 
-        # Check if there is metadata, if there is, validate it and extract it, otherwise just parse the y coordinate
+        # Check if there is metadata
         if " " in other:
             y, metadata = other.split(" ", 1)
             y, metadata = y.strip(), metadata.strip()
@@ -120,8 +120,7 @@ class Parser:
 
                 if key == "nb_drones":
                     if int(value) <= 0:
-                        raise ValueError(f"{key} must be a positive_integer \
-                                         and greater than 0")
+                        raise ValueError(f"{key} must be a positive_integer and greater than 0")
                     parsed_config[key] = int(value)
 
                 elif key in ["start_hub", "end_hub"]:

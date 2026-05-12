@@ -47,12 +47,12 @@ class Parser:
             raise Exception("Invalid Config - Not enough values")
 
         if "-" in name or " " in name:
-            raise ValueError(f"Invalid zone name '{name}' - \
-                             Zone names cannot contain '-'")
+            raise ValueError(f"Invalid zone name '{name}', Zone names cannot contain '-'")
 
         metadata_dict = {}
         y = 0
 
+        # Check if there is metadata, if there is, validate it and extract it, otherwise just parse the y coordinate
         if " " in other:
             y, metadata = other.split(" ", 1)
             y, metadata = y.strip(), metadata.strip()
@@ -65,21 +65,28 @@ class Parser:
 
             metadata = metadata.strip("[]")
             pairs = metadata.split()
+
             for pair in pairs:
+                # validate metadata format
                 if "=" not in pair:
                     raise ValueError("Invalid Metadata format")
                 key, value = pair.split("=", 1)
+
+                # validate metadata keys
                 if key not in ["zone", "color", "max_drones"]:
                     raise ValueError(f"Invalid Metadata Key '{key}'")
 
+                # validate max_drones
                 if key == "max_drones":
                     if int(value) <= 0:
                         raise ValueError("max_drones must be a positive integer")
 
+                # validate zone type
                 if key == "zone":
                     if value not in ["normal", "priority", "restricted", "blocked"]:
                         raise ValueError(f"Invalid zone type '{value}'")
 
+                # validate color
                 if key == "color":
                     try:
                         hex_code = webcolors.name_to_hex(value)
@@ -235,6 +242,7 @@ class Parser:
 
             # just making the (start, hub) hubs capable of holding all drones
             valid_config["start_hub"]["max_drones"] = valid_config["nb_drones"]
+            valid_config["end_hub"]["max_drones"] = valid_config["nb_drones"]
             valid_config["start_hub"]["zone"] = "normal"
 
         except Exception as e:

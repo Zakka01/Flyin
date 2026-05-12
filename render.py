@@ -216,7 +216,7 @@ class Render:
         start = False
 
         while running:
-            self.clock.tick(2)  # 2 FPS
+            self.clock.tick(3)  # 2 FPS
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or \

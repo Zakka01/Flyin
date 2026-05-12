@@ -62,12 +62,11 @@ class Main:
                               graph.end_hub,
                               all_zones,
                               connection_dct)
-        simulator.play()
-        # zones = graph.get_all_zones()
-        # connections = graph.build_connection_dict()
+        zones = graph.get_all_zones()
+        connections = graph.build_connection_dict()
 
-        # render = Render(zones, connections, graph, drones, simulator)
-        # render.play()
+        render = Render(zones, connections, graph, drones, simulator)
+        render.play()
 
 
 if __name__ == "__main__":

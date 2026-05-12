@@ -133,6 +133,7 @@ class Simulator:
             self.output.append(output_line)
             print(output_line)
             self.turns += 1
+
         return output_line
 
     def play(self) -> int:

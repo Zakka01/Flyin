@@ -4,7 +4,6 @@ from drone import Drone
 from typing import List
 from simulator import Simulator
 from render import Render
-from connection import Connection
 
 
 class Main:
@@ -16,7 +15,8 @@ class Main:
         try:
             drones = []
 
-            selected_paths = all_paths[:2] if len(all_paths) >= 2 else all_paths
+            selected_paths = all_paths[:2] if len(all_paths) >= 2 \
+                else all_paths
 
             # just print the 2 selected paths
             # for p in selected_paths:

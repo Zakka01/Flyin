@@ -5,9 +5,9 @@ import webcolors
 class Parser:
     def __init__(self) -> None:
         self.config: dict = {}
+        self.connection_hubs: list = []
 
     def parse_connection(self, value: str) -> dict:
-
         max_link_capacity = 1
 
         if "[" in value:
@@ -32,6 +32,11 @@ class Parser:
         if "-" not in dist:
             raise ValueError("Invalid connection format")
         from_dist, to_dist = dist.strip().split("-", 1)
+
+        connection = {from_dist.strip(), to_dist.strip()}
+        if connection in self.connection_hubs:
+            raise ValueError("Duplicate connection")
+        self.connection_hubs.append(connection)
 
         return {
             "from": from_dist.strip(),
@@ -185,7 +190,7 @@ class Parser:
                     first_line = True
                     for line in file:
                         line = line.strip().lower()
-                        print(line)
+                        # print(line)
 
                         if line.startswith("#"):
                             continue
@@ -248,5 +253,4 @@ class Parser:
             print(f"ERROR: {e}")
             sys.exit(0)
 
-        # print(valid_config)
         return valid_config

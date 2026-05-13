@@ -17,7 +17,7 @@ class Parser:
             if not (metadata.startswith("[") and metadata.endswith("]")):
                 raise ValueError("Invalid metadata")
 
-            metadata = metadata.strip("[]")
+            metadata = metadata.strip("[]").strip()
             if "=" not in metadata:
                 raise ValueError("Invalid metadata")
 
@@ -184,11 +184,11 @@ class Parser:
                 with open(filename, "r") as file:
                     first_line = True
                     for line in file:
-                        line = line.strip()
+                        line = line.strip().lower()
+                        print(line)
 
                         if line.startswith("#"):
                             continue
-
 
                         elif line == "":
                             continue
@@ -248,5 +248,5 @@ class Parser:
             print(f"ERROR: {e}")
             sys.exit(0)
 
-        print(valid_config)
+        # print(valid_config)
         return valid_config

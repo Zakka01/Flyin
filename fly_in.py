@@ -18,7 +18,7 @@ class Main:
             selected_paths = all_paths[:2] if len(all_paths) >= 2 \
                 else all_paths
 
-            # just print the 2 selected paths
+            # # just print the 2 selected paths
             # for p in selected_paths:
             #     for key, value in p.items():
             #         if key == "path":

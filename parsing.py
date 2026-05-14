@@ -190,40 +190,49 @@ class Parser:
                     first_line = True
                     for line in file:
                         line = line.strip().lower()
-                        # print(line)
 
+                        # line starts with comment #
                         if line.startswith("#"):
                             continue
 
+                        # empty line
                         elif line == "":
                             continue
 
+                        # if nb_drones is not the first line
                         elif not line.startswith("nb_drones") and first_line is True:
                             raise ValueError("The first line must be 'nb_drones'")
 
+                        # if there is no colon in the line
                         elif ":" not in line:
                             raise ValueError("Invalid config line")
 
                         else:
                             key, value = line.split(":", 1)
-                            key, value = key.lower().strip(), value.strip()
+                            key, value = key.strip(), value.strip()
 
+                            # if there is no value
                             if not value:
                                 raise ValueError(f"No value given for {key}")
 
+                            # if key is duplicated
                             if key in mandatory_keys and key in config:
                                 raise ValueError(f"{key} should not be duplicated")
 
+                            # if key is not a mandatory or extra key
                             if key not in mandatory_keys and \
                                 key not in extra_keys:
                                 raise ValueError(f"Key: '{key}' is not Valid")
-                            
+
+                            # if key has a comment
                             if "#" in value:
                                 value, comment = value.split("#", 1)
 
+                            # if key is a mandatory key
                             if key in mandatory_keys:
                                 config[key] = value
 
+                            # if key is an extra key
                             elif key in extra_keys:
                                 if key not in config:
                                     config[key] = []

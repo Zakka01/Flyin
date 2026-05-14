@@ -67,16 +67,24 @@ class Render:
             screen_x = offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
             screen_y = offset_y + (zone.y - self.minheight) * (cell_size + padding) + margin
         else:
-            screen_x = (offset_x + (zone.from_dst.x - self.minwidth) * (cell_size + padding) + margin) // 2 + \
-                       (offset_x + (zone.to_dst.x - self.minwidth) * (cell_size + padding) + margin) // 2
-            screen_y = (offset_y + (zone.from_dst.y - self.minheight) * (cell_size + padding) + margin) // 2 + \
-                       (offset_y + (zone.to_dst.y - self.minheight) * (cell_size + padding) + margin) // 2
+            screen_x = (offset_x + (zone.from_dst.x - self.minwidth) * \
+                       (cell_size + padding) + margin) // 2 + \
+                       (offset_x + (zone.to_dst.x - self.minwidth) *
+                                    (cell_size + padding) + margin) // 2
+
+            screen_y = (offset_y + (zone.from_dst.y - self.minheight) *
+                       (cell_size + padding) + margin) // 2 + \
+                       (offset_y + (zone.to_dst.y - self.minheight) *
+                                   (cell_size + padding) + margin) // 2
 
         return screen_x, screen_y
 
     def get_zone_center(self, zone, cell_size, padding, margin):
 
-        screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
+        screen_x, screen_y = self.get_zone_screen_pos(zone,
+                                                      cell_size,
+                                                      padding,
+                                                      margin)
 
         rect_size = (cell_size + padding) - 2 * margin
         center_x = screen_x + rect_size // 2
@@ -89,7 +97,10 @@ class Render:
         rect_size = (cell_size + padding) - 2 * margin
 
         for zone in self.zones:
-            screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
+            screen_x, screen_y = self.get_zone_screen_pos(zone,
+                                                          cell_size,
+                                                          padding,
+                                                          margin)
 
             if zone.color == "rainbow":
                 zone.color = (220, 77, 1)
@@ -114,11 +125,12 @@ class Render:
             else:
                 center_fill = "#007C8F"
                 fill = "#00A8C2"
-            
+
             pygame.draw.rect(
                 self.screen,
                 center_fill,
-                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
+                [screen_x + self.camera[0],
+                    screen_y + self.camera[1], rect_size, rect_size],
                 0,
                 border_radius=100
             )
@@ -126,7 +138,8 @@ class Render:
             pygame.draw.rect(
                 self.screen,
                 fill,
-                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
+                [screen_x + self.camera[0],
+                    screen_y + self.camera[1], rect_size, rect_size],
                 thickness,
                 border_radius=100
             )
@@ -134,7 +147,8 @@ class Render:
             pygame.draw.rect(
                 self.screen,
                 zone.color,
-                [screen_x + self.camera[0], screen_y + self.camera[1], rect_size, rect_size],
+                [screen_x + self.camera[0],
+                    screen_y + self.camera[1], rect_size, rect_size],
                 4,
                 border_radius=100
             )
@@ -144,15 +158,24 @@ class Render:
 
         for zone_name, neighbors in self.connections.items():
             zone = self.zone_lookup[zone_name]
-            zone_center_x, zone_center_y = self.get_zone_center(zone, cell_size, padding, margin)
+            zone_center_x, zone_center_y = self.get_zone_center(zone,
+                                                                cell_size,
+                                                                padding,
+                                                                margin)
 
             for neighbor_zone, capacity in neighbors:
-                neighbor_center_x, neighbor_center_y = self.get_zone_center(neighbor_zone, cell_size, padding, margin)
+                neighbor_zone_center = self.get_zone_center(neighbor_zone,
+                                                            cell_size, padding,
+                                                            margin)
+                neighbor_center_x, neighbor_center_y = neighbor_zone_center
+
                 pygame.draw.line(
-                    self.screen, 
+                    self.screen,
                     "#6DC5D4",
-                    (zone_center_x + self.camera[0], zone_center_y + self.camera[1]),
-                    (neighbor_center_x + self.camera[0], neighbor_center_y + self.camera[1]),
+                    (zone_center_x + self.camera[0],
+                        zone_center_y + self.camera[1]),
+                    (neighbor_center_x + self.camera[0],
+                        neighbor_center_y + self.camera[1]),
                     2
                 )
 
@@ -167,14 +190,19 @@ class Render:
             "#E67E22", "#00866C", "#2ECC71", "#D35400", "#8E44AD"
         ]
         for drone in self.drones:
-            drone_num = int(drone.id[1:])  # extract number from "D1", "D2", etc
-            self.drone_colors[drone.id] = clear_colors[drone_num % len(clear_colors)]
+            drone_num = int(drone.id[1:])
+            self.drone_colors[drone.id] = clear_colors[
+                drone_num % len(clear_colors)
+            ]
 
         for drone in self.drones:
 
             current = drone.current_zone()
 
-            screen_x, screen_y = self.get_zone_screen_pos(current, cell_size, padding, margin)
+            screen_x, screen_y = self.get_zone_screen_pos(current,
+                                                          cell_size,
+                                                          padding,
+                                                          margin)
 
             # Center drone inside zone
             drone_x = screen_x + (rect_size - drone_size) // 2
@@ -184,14 +212,18 @@ class Render:
             pygame.draw.rect(
                 self.screen,
                 drone_color,
-                [drone_x + 1 + self.camera[0], drone_y + 1 + self.camera[1], drone_size - 2, drone_size - 2],
+                [drone_x + 1 + self.camera[0],
+                    drone_y + 1 + self.camera[1],
+                    drone_size - 2, drone_size - 2],
                 0,
                 border_radius=100
             )
             pygame.draw.rect(
                 self.screen,
                 "white",
-                [drone_x + self.camera[0], drone_y + self.camera[1], drone_size, drone_size],
+                [drone_x + self.camera[0],
+                    drone_y + self.camera[1],
+                    drone_size, drone_size],
                 3,
                 border_radius=100
             )
@@ -214,19 +246,22 @@ class Render:
         running = True
         paused = False
         start = False
+        turns = 0
 
         while running:
-            self.clock.tick(2)  # 2 FPS
+            self.clock.tick(5)  # 5 FPS
 
             for event in pygame.event.get():
-                if event.type == pygame.QUIT or \
-                   (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                quit = event.type == pygame.QUIT
+                if quit or (event.type == pygame.KEYDOWN and
+                            event.key == pygame.K_ESCAPE):
+
                     running = False
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and start:
                         paused = not paused
-                    
+
                     if event.key == pygame.K_RETURN:
                         start = True
 

@@ -3,13 +3,13 @@
 nb_drones: 5
 
 start_hub: start 0 0 [color=green Max_drones=5]
-hub: junction 1 0 [color=yellow]
-hub: dead_end 1 1 [color=red]
+hub: junction 1 0 [color=yellow zone=restricted]
+HUB: dead_end 1 1 [color=red]
 hub: correct_path 2 0 [color=blue]
 hub: intermediate 3 0 [color=blue]
 end_hub: goal 4 0 [COLOR=green max_DroneS=5]
 
-connection: start-junction
+connection: start-junction [max_link_capacity=2]
 connection: junction-dead_end
 connection: junction-correct_path
 connection: correct_path-intermediate

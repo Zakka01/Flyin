@@ -71,7 +71,11 @@ class Graph:
             capacity = c.get("max_link_capacity", 1)
 
             to_zone = self.zone_lookup[to_name]
+            from_zone = self.zone_lookup[from_name]
+
             connection_dict[from_name].append((to_zone, capacity))
+
+            connection_dict[to_name].append((from_zone, capacity))
 
         return connection_dict
 
@@ -110,8 +114,10 @@ class Graph:
 
                 else:
                     if neighbor.is_zone_priority():
-                        queue.appendleft((neighbor, path_so_far + [neighbor]))
+                        new_path = path_so_far + [neighbor]
+                        queue.appendleft((neighbor, new_path))
                     else:
-                        queue.append((neighbor, path_so_far + [neighbor]))
+                        new_path = path_so_far + [neighbor]
+                        queue.append((neighbor, new_path))
 
         return self.paths

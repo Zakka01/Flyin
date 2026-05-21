@@ -1,18 +1,13 @@
 import os
 import warnings
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
-warnings.filterwarnings("ignore", category=RuntimeWarning)
-import random
 from typing import List
-
 import pygame
-
-from connection import Connection
 from drone import Drone
 from graph import Graph
 from simulator import Simulator
 from zone import Zone
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 class Render:
@@ -40,13 +35,13 @@ class Render:
         self.maxwidth = 0
 
         pygame.init()
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.screen = pygame.display.set_mode((self.screen_width,
+                                               self.screen_height))
         self.clock = pygame.time.Clock()
         self.get_min_max()
 
-        self.grid = []
         self.camera = [0, 0]
-        self.drone_colors = {}
+        self.drone_colors: dict = {}
 
     def get_min_max(self) -> None:
         x = []
@@ -61,7 +56,11 @@ class Render:
         self.maxheight = max(y)
         self.maxwidth = max(x)
 
-    def get_zone_screen_pos(self, zone, cell_size, padding, margin):
+    def get_zone_screen_pos(self,
+                            zone: Zone,
+                            cell_size: int,
+                            padding: int,
+                            margin: int) -> tuple[int, int]:
 
         grid_width = (self.maxwidth - self.minwidth) * (cell_size + padding)
         grid_height = (self.maxheight - self.minheight) * (cell_size + padding)
@@ -70,10 +69,12 @@ class Render:
 
         if isinstance(zone, Zone):
             screen_x = (
-                offset_x + (zone.x - self.minwidth) * (cell_size + padding) + margin
+                offset_x + (zone.x - self.minwidth) *
+                (cell_size + padding) + margin
             )
             screen_y = (
-                offset_y + (zone.y - self.minheight) * (cell_size + padding) + margin
+                offset_y + (zone.y - self.minheight) *
+                (cell_size + padding) + margin
             )
         else:
             screen_x = (
@@ -98,9 +99,16 @@ class Render:
 
         return screen_x, screen_y
 
-    def get_zone_center(self, zone, cell_size, padding, margin):
+    def get_zone_center(self,
+                        zone: Zone,
+                        cell_size: int,
+                        padding: int,
+                        margin: int) -> tuple[int, int]:
 
-        screen_x, screen_y = self.get_zone_screen_pos(zone, cell_size, padding, margin)
+        screen_x, screen_y = self.get_zone_screen_pos(zone,
+                                                      cell_size,
+                                                      padding,
+                                                      margin)
 
         rect_size = (cell_size + padding) - 2 * margin
         center_x = screen_x + rect_size // 2
@@ -108,7 +116,11 @@ class Render:
 
         return center_x, center_y
 
-    def draw_zone(self, cell_size, padding, thickness):
+    def draw_zone(self,
+                  cell_size: int,
+                  padding: int,
+                  thickness: int) -> None:
+
         margin = 10
         rect_size = (cell_size + padding) - 2 * margin
 
@@ -118,9 +130,9 @@ class Render:
             )
 
             if zone.color == "rainbow":
-                zone.color = (220, 77, 1)
+                zone.color = "#DC4D01"
             elif zone.color is None:
-                zone.color = (0, 120, 143)
+                zone.color = "#00788F"
 
             if zone.is_zone_restricted():
                 fill = "#E78311"
@@ -180,7 +192,7 @@ class Render:
                 border_radius=100,
             )
 
-    def draw_connection(self, cell_size, padding):
+    def draw_connection(self, cell_size: int, padding: int) -> None:
         margin = 10
 
         for zone_name, neighbors in self.connections.items():
@@ -198,7 +210,8 @@ class Render:
                 pygame.draw.line(
                     self.screen,
                     "#6DC5D4",
-                    (zone_center_x + self.camera[0], zone_center_y + self.camera[1]),
+                    (zone_center_x + self.camera[0],
+                        zone_center_y + self.camera[1]),
                     (
                         neighbor_center_x + self.camera[0],
                         neighbor_center_y + self.camera[1],
@@ -206,7 +219,12 @@ class Render:
                     2,
                 )
 
-    def draw_drone(self, cell_size, padding, drone_size, thickness):
+    def draw_drone(self,
+                   cell_size: int,
+                   padding: int,
+                   drone_size: int,
+                   thickness: int) -> None:
+
         margin = 10
         rect_size = (cell_size + padding) - 2 * margin
 
@@ -234,7 +252,8 @@ class Render:
         ]
         for drone in self.drones:
             drone_num = int(drone.id[1:])
-            self.drone_colors[drone.id] = clear_colors[drone_num % len(clear_colors)]
+            self.drone_colors[drone.id] = clear_colors[drone_num %
+                                                       len(clear_colors)]
 
         for drone in self.drones:
             current = drone.current_zone()
@@ -283,7 +302,7 @@ class Render:
             )
             self.screen.blit(text, text_rect)
 
-    def play(self):
+    def play(self) -> None:
 
         cell_size = 30
         drone_size = 30
@@ -301,7 +320,8 @@ class Render:
             for event in pygame.event.get():
                 quit = event.type == pygame.QUIT
                 if quit or (
-                    event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+                    event.type == pygame.KEYDOWN and
+                    event.key == pygame.K_ESCAPE
                 ):
                     running = False
 

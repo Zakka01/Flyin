@@ -1,5 +1,6 @@
 import sys
 import webcolors
+from typing import Any
 
 
 class Parser:
@@ -52,10 +53,11 @@ class Parser:
             raise Exception("Invalid Config - Not enough values")
 
         if "-" in name or " " in name:
-            raise ValueError(f"Invalid zone name '{name}', Zone names cannot contain '-'")
+            raise ValueError(f"Invalid zone name '{name}', "
+                             "Zone names cannot contain '-'")
 
         metadata_dict = {}
-        y = 0
+        y = None
 
         # Check if there is metadata
         if " " in other:
@@ -84,11 +86,15 @@ class Parser:
                 # validate max_drones
                 if key == "max_drones":
                     if int(value) <= 0:
-                        raise ValueError("max_drones must be a positive integer")
+                        raise ValueError("max_drones must "
+                                         "be a positive integer")
 
                 # validate zone type
                 if key == "zone":
-                    if value not in ["normal", "priority", "restricted", "blocked"]:
+                    if value not in ["normal",
+                                     "priority",
+                                     "restricted",
+                                     "blocked"]:
                         raise ValueError(f"Invalid zone type '{value}'")
 
                 # validate color
@@ -120,12 +126,13 @@ class Parser:
     def validate_config(self, config: dict) -> dict:
         try:
 
-            parsed_config = {}
+            parsed_config: dict[str, Any] = {}
             for key, value in config.items():
 
                 if key == "nb_drones":
                     if int(value) <= 0:
-                        raise ValueError(f"{key} must be a positive_integer and greater than 0")
+                        raise ValueError(f"{key} must be a positive_integer "
+                                         "and greater than 0")
                     parsed_config[key] = int(value)
 
                 elif key in ["start_hub", "end_hub"]:
@@ -200,8 +207,10 @@ class Parser:
                             continue
 
                         # if nb_drones is not the first line
-                        elif not line.startswith("nb_drones") and first_line is True:
-                            raise ValueError("The first line must be 'nb_drones'")
+                        elif not line.startswith("nb_drones") and \
+                                first_line is True:
+                            raise ValueError("The first line "
+                                             "must be 'nb_drones'")
 
                         # if there is no colon in the line
                         elif ":" not in line:
@@ -217,11 +226,12 @@ class Parser:
 
                             # if key is duplicated
                             if key in mandatory_keys and key in config:
-                                raise ValueError(f"{key} should not be duplicated")
+                                raise ValueError(f"{key} should not "
+                                                 "be duplicated")
 
                             # if key is not a mandatory or extra key
                             if key not in mandatory_keys and \
-                                key not in extra_keys:
+                               key not in extra_keys:
                                 raise ValueError(f"Key: '{key}' is not Valid")
 
                             # if key has a comment

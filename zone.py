@@ -1,12 +1,12 @@
 class Zone:
     def __init__(self, config: dict) -> None:
-        self.name = config["name"]
-        self.y = config["y"]
-        self.x = config["x"]
-        self.zone_type = config["zone"]
-        self.color = config["color"]
-        self.max_drones = config["max_drones"]
-        self.drone_in = 0
+        self.name: str = config["name"]
+        self.y: int = config["y"]
+        self.x: int = config["x"]
+        self.zone_type: str = config["zone"]
+        self.color: str = config["color"]
+        self.max_drones: int = config["max_drones"]
+        self.drone_in: int = 0
 
     def is_zone_blocked(self) -> bool:
         return self.zone_type == "blocked"

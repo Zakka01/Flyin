@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List
+from typing import List, Any
 
 from connection import Connection
 from zone import Zone
@@ -13,7 +13,7 @@ class Graph:
         self.start_hub = self.zone_lookup[config["start_hub"]["name"]]
         self.end_hub = self.zone_lookup[config["end_hub"]["name"]]
         self.connection_dict = self.build_connection_dict()
-        self.paths = []
+        self.paths: List[dict[str, Any]] = []
 
     def get_all_zones(self) -> List[Zone]:
 
@@ -63,7 +63,7 @@ class Graph:
 
     def build_connection_dict(self) -> dict:
 
-        connection_dict = {}
+        connection_dict: dict[str, list] = {}
         for zone in self.all_zones:
             connection_dict[zone.name] = []
 
@@ -80,7 +80,7 @@ class Graph:
 
         return connection_dict
 
-    def build_paths(self, path: List):
+    def build_paths(self, path: List) -> None:
         cost = 0
         for p in path[1:]:
             if not isinstance(p, Connection):

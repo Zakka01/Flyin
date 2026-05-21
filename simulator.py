@@ -21,17 +21,17 @@ class Simulator:
         self.start = start_hub
         self.end = end_hub
         self.connections = connection_dict
-        self.output = []
+        self.output: List = []
         self.turns = 0
         self.is_running = True
 
     def is_all_delivered(self) -> bool:
         return all(drone.is_delivered() for drone in self.drones)
 
-    def validate_moves(self, drones_moves: List):
+    def validate_moves(self, drones_moves: List) -> List[dict]:
         valid_moves = []
-        dst_count = defaultdict(int)
-        connection_count = defaultdict(int)
+        dst_count: dict = defaultdict(int)
+        connection_count: dict = defaultdict(int)
 
         drones_moves.sort(key=lambda m: int(m["drone"].id[1:]))
 
@@ -41,10 +41,10 @@ class Simulator:
             current_zone = move["drone"].current_zone()
 
             if isinstance(current_zone, Zone):
-                connection_info = self.get_connection(current_zone, dst)
-                connection_capacity = connection_info["connection_capacity"]
+                conn_info = self.get_connection(current_zone, dst)
+                connection_capacity = conn_info["connection_capacity"]
                 connection_name = (
-                    connection_info["from"].name + "-" + connection_info["to"].name
+                    conn_info["from"].name + "-" + conn_info["to"].name
                 )
             else:
                 connection_capacity = current_zone.max_capacity
@@ -93,7 +93,7 @@ class Simulator:
             "connection_capacity": connection_capacity,
         }
 
-    def apply_moves(self, valid_moves: List):
+    def apply_moves(self, valid_moves: List) -> None:
         for move in valid_moves:
             drone = move["drone"]
             dst = move["dst"]
@@ -101,25 +101,25 @@ class Simulator:
             move_type = move["type"]
 
             if move_type == "normal_move":
-                drone.move(flag=False)
+                drone.move()
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 dst.drone_in += 1
 
             elif move_type == "connection_enter":
-                drone.move(flag=True)
+                drone.move()
                 dst.drone_in += 1
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 drone.on_connection = True
 
             elif move_type == "connection_exit":
-                drone.move(flag=False)
+                drone.move()
                 current.drone_in -= 1 if current.drone_in > 0 else 0
                 dst.drone_in += 1
                 drone.on_connection = False
 
-    def record_turn_output(self, valid_moves: List[dict]):
+    def record_turn_output(self, valid_moves: List[dict]) -> str | None:
         if not valid_moves:
-            return
+            return None
 
         turn_output = []
         for move in valid_moves:

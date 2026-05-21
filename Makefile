@@ -3,7 +3,7 @@ MAIN = fly_in.py
 CONFIG = config.txt
 
 install:
-	python3 -m venv env
+	python3 -m venv v
 
 run :
 	@$(PYTHON) $(MAIN) $(CONFIG)

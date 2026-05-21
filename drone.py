@@ -1,14 +1,13 @@
 from typing import List
-
 from connection import Connection
 from zone import Zone
 
 
 class Drone:
     def __init__(self, id: str, path: List[Zone]):
-        self.id = id
-        self.path = path
-        self.current_pos = 0
+        self.id: str = id
+        self.path: List[Zone] = path
+        self.current_pos: int = 0
 
     def current_zone(self) -> Zone:
         return self.path[self.current_pos]
@@ -19,12 +18,10 @@ class Drone:
     def next_of_next_zone(self) -> Zone:
         return self.path[self.current_pos + 2]
 
-    def deliver(self):
+    def deliver(self) -> None:
         self.status = "delivered"
 
-    def move(self, flag: bool = False):
-        if flag:
-            self.status = "waiting"
+    def move(self) -> None:
         self.current_pos += 1
         self.status = "moving"
 
@@ -37,8 +34,8 @@ class Drone:
             return False
         return True
 
-    def on_connection(self, current_zone: Zone):
+    def on_connection(self, current_zone: Zone) -> bool:
         return isinstance(current_zone, Connection)
 
-    def on_zone(self, current_zone: Zone):
+    def on_zone(self, current_zone: Zone) -> bool:
         return isinstance(current_zone, Zone)

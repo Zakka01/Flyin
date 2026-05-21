@@ -1,11 +1,11 @@
-from zone import Zone
-from typing import List
-from connection import Connection
 from collections import deque
+from typing import List
+
+from connection import Connection
+from zone import Zone
 
 
 class Graph:
-
     def __init__(self, config: dict):
         self.config = config
         self.all_zones = self.get_all_zones()
@@ -50,8 +50,10 @@ class Graph:
             if dups_names:
                 raise ValueError("Can't have two duplicated zones name")
             if dups_coors:
-                raise ValueError("Can't have two zones with \
-                    the same Coordinates")
+                raise ValueError(
+                    "Can't have two zones with \
+                    the same Coordinates"
+                )
 
         except ValueError as e:
             print(f"ERROR: {e}")
@@ -74,7 +76,6 @@ class Graph:
             from_zone = self.zone_lookup[from_name]
 
             connection_dict[from_name].append((to_zone, capacity))
-
             connection_dict[to_name].append((from_zone, capacity))
 
         return connection_dict
@@ -84,7 +85,6 @@ class Graph:
         for p in path[1:]:
             if not isinstance(p, Connection):
                 cost += p.it_cost()
-
         self.paths.append({"path": path, "cost": cost})
 
     def find_all_paths(self) -> List[dict]:
@@ -93,8 +93,11 @@ class Graph:
 
         while queue:
             current_zone, path_so_far = queue.popleft()
+            print(
+                f"Queue: {current_zone.name}, {[p.name for p in path_so_far]}"
+            )  # for debuging
 
-            # stop when we reach the end, and we build the path
+            # build path when current is end and continue find other paths
             if current_zone.name == self.end_hub.name:
                 self.build_paths(path_so_far)
                 continue

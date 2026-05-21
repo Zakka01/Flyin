@@ -1,17 +1,20 @@
+from collections import defaultdict
+from typing import List
+
+from connection import Connection
 from drone import Drone
 from zone import Zone
-from connection import Connection
-from typing import List
-from collections import defaultdict
 
 
 class Simulator:
-
-    def __init__(self, drones: List[Drone],
-                 start_hub: Zone,
-                 end_hub: Zone,
-                 all_zones: List[Zone],
-                 connection_dict: dict):
+    def __init__(
+        self,
+        drones: List[Drone],
+        start_hub: Zone,
+        end_hub: Zone,
+        all_zones: List[Zone],
+        connection_dict: dict,
+    ):
 
         self.all_zones = all_zones
         self.drones = drones
@@ -40,17 +43,20 @@ class Simulator:
             if isinstance(current_zone, Zone):
                 connection_info = self.get_connection(current_zone, dst)
                 connection_capacity = connection_info["connection_capacity"]
-                connection_name = connection_info["from"].name + "-" + \
-                    connection_info["to"].name
+                connection_name = (
+                    connection_info["from"].name + "-" + connection_info["to"].name
+                )
             else:
                 connection_capacity = current_zone.max_capacity
                 connection_name = current_zone.name
 
+            # get max capacity of destination
             if isinstance(dst, Connection):
                 max_capacity = dst.max_capacity
             else:
                 max_capacity = dst.max_drones
 
+            # calculate available slots
             drone_leaving = 0
             if current_zone != dst:
                 drone_leaving += 1
@@ -58,10 +64,12 @@ class Simulator:
             current_capacity = dst.drone_in
             available_slots = max_capacity - current_capacity + drone_leaving
 
-            if dst_count[dst_name] < available_slots and \
-               connection_count[connection_name] < connection_capacity and \
-               connection_count[connection_name] < max_capacity:
-
+            # check if move is valid
+            if (
+                dst_count[dst_name] < available_slots
+                and connection_count[connection_name] < connection_capacity
+                and connection_count[connection_name] < max_capacity
+            ):
                 valid_moves.append(move)
                 dst_count[dst_name] += 1
                 connection_count[connection_name] += 1
@@ -82,7 +90,7 @@ class Simulator:
         return {
             "from": from_dst,
             "to": to_dst,
-            "connection_capacity": connection_capacity
+            "connection_capacity": connection_capacity,
         }
 
     def apply_moves(self, valid_moves: List):
@@ -137,12 +145,12 @@ class Simulator:
         return output_line
 
     def play(self) -> int:
+
         output = []
+        drones_moves = []
 
         if self.is_all_delivered():
             self.is_running = False
-
-        drones_moves = []
 
         for drone in self.drones:
             if drone.is_delivered():
@@ -151,34 +159,40 @@ class Simulator:
             current = drone.current_zone()
 
             if isinstance(current, Connection):
-                drones_moves.append({
-                    "current": current,
-                    "drone": drone,
-                    "dst": current.to_dst,
-                    "type": "connection_exit",
-                    "record": True
-                })
+                drones_moves.append(
+                    {
+                        "current": current,
+                        "drone": drone,
+                        "dst": current.to_dst,
+                        "type": "connection_exit",
+                        "record": True,
+                    }
+                )
 
             elif drone.can_move():
                 next_item = drone.next_zone()
 
                 if isinstance(next_item, Connection):
-                    drones_moves.append({
-                        "current": current,
-                        "drone": drone,
-                        "dst": next_item,
-                        "type": "connection_enter",
-                        "record": True
-                    })
+                    drones_moves.append(
+                        {
+                            "current": current,
+                            "drone": drone,
+                            "dst": next_item,
+                            "type": "connection_enter",
+                            "record": True,
+                        }
+                    )
 
                 else:
-                    drones_moves.append({
-                        "current": current,
-                        "drone": drone,
-                        "dst": next_item,
-                        "type": "normal_move",
-                        "record": True
-                    })
+                    drones_moves.append(
+                        {
+                            "current": current,
+                            "drone": drone,
+                            "dst": next_item,
+                            "type": "normal_move",
+                            "record": True,
+                        }
+                    )
 
         valid_moves = self.validate_moves(drones_moves)
         self.apply_moves(valid_moves)

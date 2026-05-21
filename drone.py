@@ -1,10 +1,10 @@
-from zone import Zone
 from typing import List
+
 from connection import Connection
+from zone import Zone
 
 
 class Drone:
-
     def __init__(self, id: str, path: List[Zone]):
         self.id = id
         self.path = path
@@ -32,8 +32,8 @@ class Drone:
         return self.current_pos >= len(self.path) - 1
 
     def can_move(self) -> bool:
-        next_index = self.current_pos + 1
-        if next_index >= len(self.path):
+        next_pos = self.current_pos + 1
+        if next_pos >= len(self.path):
             return False
         return True
 

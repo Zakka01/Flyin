@@ -2,7 +2,6 @@ from zone import Zone
 
 
 class Connection:
-
     def __init__(self, from_dst: Zone, to_dst: Zone, capacity: int):
         self.name = from_dst.name + "-" + to_dst.name
         self.from_dst = from_dst

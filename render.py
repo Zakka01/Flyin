@@ -1,11 +1,11 @@
 import os
 import warnings
 from typing import List
-import pygame
 from drone import Drone
 from graph import Graph
 from simulator import Simulator
 from zone import Zone
+import pygame
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -357,5 +357,5 @@ class Render:
 
             pygame.display.flip()
 
-        print(turns)
+        print(f"\n\033[92m>> Simulation completed in {turns} turns\033[0m")
         pygame.quit()

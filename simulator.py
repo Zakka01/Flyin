@@ -21,7 +21,6 @@ class Simulator:
         self.start = start_hub
         self.end = end_hub
         self.connections = connection_dict
-        self.output: List = []
         self.turns = 0
         self.is_running = True
 
@@ -33,6 +32,7 @@ class Simulator:
         dst_count: dict = defaultdict(int)
         connection_count: dict = defaultdict(int)
 
+        # sort moves by drone id to ensure consistent order
         drones_moves.sort(key=lambda m: int(m["drone"].id[1:]))
 
         for move in drones_moves:
@@ -94,6 +94,7 @@ class Simulator:
         }
 
     def apply_moves(self, valid_moves: List) -> None:
+
         for move in valid_moves:
             drone = move["drone"]
             dst = move["dst"]
@@ -117,7 +118,7 @@ class Simulator:
                 dst.drone_in += 1
                 drone.on_connection = False
 
-    def record_turn_output(self, valid_moves: List[dict]) -> str | None:
+    def record_turn_output(self, valid_moves: List[dict]) -> None:
         if not valid_moves:
             return None
 
@@ -128,27 +129,20 @@ class Simulator:
 
             drone_id = move["drone"].id
             dst = move["dst"]
-
-            if isinstance(dst, Connection):
-                destination_name = dst.name
-            else:
-                destination_name = dst.name
+            destination_name = dst.name
 
             turn_output.append(f"{drone_id}-{destination_name}")
 
         if turn_output:
             output_line = " ".join(turn_output)
-            self.output.append(output_line)
             print(output_line)
             self.turns += 1
 
-        return output_line
-
     def play(self) -> int:
 
-        output = []
         drones_moves = []
 
+        # for the render (pygame) to stop the simulation
         if self.is_all_delivered():
             self.is_running = False
 
@@ -196,6 +190,6 @@ class Simulator:
 
         valid_moves = self.validate_moves(drones_moves)
         self.apply_moves(valid_moves)
-        output.append(self.record_turn_output(valid_moves))
+        self.record_turn_output(valid_moves)
 
         return self.turns

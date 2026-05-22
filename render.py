@@ -58,75 +58,72 @@ class Render:
 
     def get_zone_screen_pos(self,
                             zone: Zone,
-                            cell_size: int,
+                            zone_size: int,
                             padding: int,
                             margin: int) -> tuple[int, int]:
 
-        grid_width = (self.maxwidth - self.minwidth) * (cell_size + padding)
-        grid_height = (self.maxheight - self.minheight) * (cell_size + padding)
+        grid_width = (self.maxwidth - self.minwidth) * (zone_size + padding)
+        grid_height = (self.maxheight - self.minheight) * (zone_size + padding)
         offset_x = (self.screen_width - grid_width) // 2
         offset_y = (self.screen_height - grid_height) // 2
 
         if isinstance(zone, Zone):
             screen_x = (
+                # first shift all to start from 0
                 offset_x + (zone.x - self.minwidth) *
-                (cell_size + padding) + margin
+                (zone_size + padding) + margin
             )
             screen_y = (
                 offset_y + (zone.y - self.minheight) *
-                (cell_size + padding) + margin
+                (zone_size + padding) + margin
             )
-        else:
-            screen_x = (
-                offset_x
-                + (zone.from_dst.x - self.minwidth) * (cell_size + padding)
-                + margin
-            ) // 2 + (
-                offset_x
-                + (zone.to_dst.x - self.minwidth) * (cell_size + padding)
-                + margin
-            ) // 2
 
-            screen_y = (
-                offset_y
-                + (zone.from_dst.y - self.minheight) * (cell_size + padding)
-                + margin
-            ) // 2 + (
-                offset_y
-                + (zone.to_dst.y - self.minheight) * (cell_size + padding)
-                + margin
-            ) // 2
+        else:
+
+            # get position of zone 1 & 2 then middle point between them 
+            from_x = offset_x + (zone.from_dst.x - self.minwidth) * \
+                (zone_size + padding) + margin
+            to_x = offset_x + (zone.to_dst.x - self.minwidth) * \
+                (zone_size + padding) + margin
+            screen_x = (from_x + to_x) // 2
+
+            # same for vertical -> y
+            from_y = offset_y + (zone.from_dst.y - self.minheight) * \
+                (zone_size + padding) + margin
+            to_y = offset_y + (zone.to_dst.y - self.minheight) * \
+                (zone_size + padding) + margin
+            screen_y = (from_y + to_y) // 2
 
         return screen_x, screen_y
 
     def get_zone_center(self,
                         zone: Zone,
-                        cell_size: int,
+                        zone_size: int,
                         padding: int,
                         margin: int) -> tuple[int, int]:
 
         screen_x, screen_y = self.get_zone_screen_pos(zone,
-                                                      cell_size,
+                                                      zone_size,
                                                       padding,
                                                       margin)
 
-        rect_size = (cell_size + padding) - 2 * margin
+        rect_size = (zone_size + padding) - 2 * margin
         center_x = screen_x + rect_size // 2
         center_y = screen_y + rect_size // 2
 
         return center_x, center_y
 
     def draw_zone(self,
-                  cell_size: int,
+                  zone_size: int,
                   padding: int,
                   thickness: int) -> None:
 
         margin = 10
-        rect_size = (cell_size + padding) - 2 * margin
+        rect_size = (zone_size + padding) - 2 * margin
 
         for zone in self.zones:
             screen_x, screen_y = self.get_zone_screen_pos(
-                zone, cell_size, padding, margin
+                zone, zone_size, padding, margin
             )
 
             if zone.color == "rainbow":
@@ -192,18 +189,20 @@ class Render:
                 border_radius=100,
             )
 
-    def draw_connection(self, cell_size: int, padding: int) -> None:
+    def draw_connection(self, zone_size: int, padding: int) -> None:
         margin = 10
 
         for zone_name, neighbors in self.connections.items():
             zone = self.zone_lookup[zone_name]
+
+            # We get the center of the zone
             zone_center_x, zone_center_y = self.get_zone_center(
-                zone, cell_size, padding, margin
+                zone, zone_size, padding, margin
             )
 
             for neighbor_zone, capacity in neighbors:
                 neighbor_zone_center = self.get_zone_center(
-                    neighbor_zone, cell_size, padding, margin
+                    neighbor_zone, zone_size, padding, margin
                 )
                 neighbor_center_x, neighbor_center_y = neighbor_zone_center
 
@@ -212,21 +211,19 @@ class Render:
                     "#6DC5D4",
                     (zone_center_x + self.camera[0],
                         zone_center_y + self.camera[1]),
-                    (
-                        neighbor_center_x + self.camera[0],
-                        neighbor_center_y + self.camera[1],
-                    ),
+                    (neighbor_center_x + self.camera[0],
+                        neighbor_center_y + self.camera[1]),
                     2,
                 )
 
     def draw_drone(self,
-                   cell_size: int,
+                   zone_size: int,
                    padding: int,
                    drone_size: int,
                    thickness: int) -> None:
 
         margin = 10
-        rect_size = (cell_size + padding) - 2 * margin
+        rect_size = (zone_size + padding) - 2 * margin
 
         clear_colors = [
             "#FF6B6B",
@@ -259,7 +256,7 @@ class Render:
             current = drone.current_zone()
 
             screen_x, screen_y = self.get_zone_screen_pos(
-                current, cell_size, padding, margin
+                current, zone_size, padding, margin
             )
 
             # Center drone inside zone
@@ -304,18 +301,18 @@ class Render:
 
     def play(self) -> None:
 
-        cell_size = 30
+        zone_size = 30
         drone_size = 30
         padding = 40
         thickness = 10
 
         running = True
         paused = False
-        start = False
+        start_simulation = False
         turns = 0
 
         while running:
-            self.clock.tick(5)  # 5 FPS
+            self.clock.tick(8)  # 5 FPS
 
             for event in pygame.event.get():
                 quit = event.type == pygame.QUIT
@@ -326,19 +323,21 @@ class Render:
                     running = False
 
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE and start:
+                    if event.key == pygame.K_SPACE and start_simulation:
                         paused = not paused
 
                     if event.key == pygame.K_RETURN:
-                        start = True
+                        start_simulation = True
 
+                    # zoom in
                     if event.key == pygame.K_UP:
-                        cell_size += 5
+                        zone_size += 5
                         if thickness < 10:
                             thickness += 2
 
-                    if event.key == pygame.K_DOWN and cell_size > 0:
-                        cell_size -= 5
+                    # zoom out
+                    if event.key == pygame.K_DOWN and zone_size > 0:
+                        zone_size -= 5
                         if thickness > 7:
                             thickness -= 2
 
@@ -347,13 +346,13 @@ class Render:
                     if event.key == pygame.K_RIGHT:
                         self.camera[0] += 20
 
-            if not paused and start and self.simulator.is_running:
+            if not paused and start_simulation and self.simulator.is_running:
                 turns = self.simulator.play()
 
             self.screen.fill("#003757")
-            self.draw_connection(cell_size, padding)
-            self.draw_zone(cell_size, padding, thickness)
-            self.draw_drone(cell_size, padding, drone_size, thickness)
+            self.draw_connection(zone_size, padding)
+            self.draw_zone(zone_size, padding, thickness)
+            self.draw_drone(zone_size, padding, drone_size, thickness)
 
             pygame.display.flip()
 

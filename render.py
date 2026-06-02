@@ -80,7 +80,7 @@ class Render:
 
         else:
 
-            # get position of zone 1 & 2 then middle point between them 
+            # get position of zone 1 & 2 then middle point between them
             from_x = offset_x + (zone.from_dst.x - self.minwidth) * \
                 (zone_size + padding) + margin
             to_x = offset_x + (zone.to_dst.x - self.minwidth) * \

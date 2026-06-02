@@ -1,5 +1,3 @@
-from typing import List
-
 from connection import Connection
 from drone import Drone
 from graph import Graph
@@ -7,7 +5,7 @@ from parsing import Parser
 from render import Render
 from simulator import Simulator
 from zone import Zone
-from typing import Any
+from typing import List, Any
 
 
 def get_drones_nb(config: dict) -> int | Any:
@@ -54,6 +52,16 @@ def assign_path_to_drone(nb_drones: int, all_paths: List) -> List:
 
 
 def main() -> None:
+    try:
+        import importlib
+        importlib.import_module("webcolors")
+        importlib.import_module("pygame")
+        importlib.import_module("flake8")
+        importlib.import_module("mypy")
+    except Exception as e:
+        raise ImportError(f"Missing dependency: {e}")
+        exit(1)
+
     parser = Parser()
     config = parser.parsing_config()
 
@@ -88,4 +96,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}")
+        exit(1)

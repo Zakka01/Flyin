@@ -25,7 +25,8 @@ class Parser:
             key, value = metadata.split("=", 1)
             if key != "max_link_capacity":
                 raise ValueError("Invalid Metadata for connection")
-
+            if int(value) < 0:
+                raise ValueError("max_link_capacity must be positive")
             max_link_capacity = int(value)
         else:
             dist = value
@@ -150,6 +151,9 @@ class Parser:
                         connection_value = self.parse_connection(v)
                         parsed_config[key].append(connection_value)
 
+                elif key == "no_render":
+                    parsed_config[key] = bool(value)
+
         except Exception as e:
             print(f"ERROR: {e}")
             sys.exit(0)
@@ -191,66 +195,77 @@ class Parser:
                 "connection"
             ]
 
-            if len(sys.argv) == 2:
-                filename = sys.argv[1]
-                with open(filename, "r") as file:
-                    first_line = True
-                    for line in file:
-                        line = line.strip().lower()
+            filename = None
+            no_render = False
+            capacity_info = False
 
-                        # line starts with comment #
-                        if line.startswith("#"):
-                            continue
+            for arg in sys.argv[1:]:
+                if arg == "--no-render":
+                    no_render = True
+                elif not arg.startswith("--"):
+                    filename = arg
 
-                        # empty line
-                        elif line == "":
-                            continue
-
-                        # if nb_drones is not the first line
-                        elif not line.startswith("nb_drones") and \
-                                first_line is True:
-                            raise ValueError("The first line "
-                                             "must be 'nb_drones'")
-
-                        # if there is no colon in the line
-                        elif ":" not in line:
-                            raise ValueError("Invalid config line")
-
-                        else:
-                            key, value = line.split(":", 1)
-                            key, value = key.strip(), value.strip()
-
-                            # if there is no value
-                            if not value:
-                                raise ValueError(f"No value given for {key}")
-
-                            # if key is duplicated
-                            if key in mandatory_keys and key in config:
-                                raise ValueError(f"{key} should not "
-                                                 "be duplicated")
-
-                            # if key is not a mandatory or extra key
-                            if key not in mandatory_keys and \
-                               key not in extra_keys:
-                                raise ValueError(f"Key: '{key}' is not Valid")
-
-                            # if key has a comment
-                            if "#" in value:
-                                value, comment = value.split("#", 1)
-
-                            # if key is a mandatory key
-                            if key in mandatory_keys:
-                                config[key] = value
-
-                            # if key is an extra key
-                            elif key in extra_keys:
-                                if key not in config:
-                                    config[key] = []
-                                config[key].append(value)
-                        first_line = False
-
-            else:
+            if filename is None:
                 raise ValueError("No config file given")
+
+            config["no_render"] = no_render
+
+            with open(filename, "r") as file:
+                first_line = True
+                for line in file:
+                    line = line.strip().lower()
+
+                    # line starts with comment #
+                    if line.startswith("#"):
+                        continue
+
+                    # empty line
+                    elif line == "":
+                        continue
+
+                    # if nb_drones is not the first line
+                    elif not line.startswith("nb_drones") and \
+                            first_line is True:
+                        raise ValueError("The first line "
+                                            "must be 'nb_drones'")
+
+                    # if there is no colon in the line
+                    elif ":" not in line:
+                        raise ValueError("Invalid config line")
+
+                    else:
+                        key, value = line.split(":", 1)
+                        key, value = key.strip(), value.strip()
+
+                        # if there is no value
+                        if not value:
+                            raise ValueError(f"No value given for {key}")
+
+                        # if key is duplicated
+                        if key in mandatory_keys and key in config:
+                            raise ValueError(f"{key} should not "
+                                                "be duplicated")
+
+                        # if key is not a mandatory or extra key
+                        if key not in mandatory_keys and \
+                            key not in extra_keys:
+                            raise ValueError(f"Key: '{key}' is not Valid")
+
+                        # if key has a comment
+                        if "#" in value:
+                            value, comment = value.split("#", 1)
+
+                        # if key is a mandatory key
+                        if key in mandatory_keys:
+                            config[key] = value
+
+                        # if key is an extra key
+                        elif key in extra_keys:
+                            if key not in config:
+                                config[key] = []
+                            config[key].append(value)
+                    first_line = False
+
 
             if (
                 "nb_drones" not in config

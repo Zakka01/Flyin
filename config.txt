@@ -8,7 +8,7 @@ hub: correct_path 2 0 [color=blue]
 hub: intermediate 3 0 [color=blue]
 end_hub: goal 4 0 [color=green max_drones=5]
 
-connection: start-junction [max_link_capacity=2]
+connection: start-junction [max_link_capacity=20]
 connection: junction-dead_end
 connection: junction-correct_path
 connection: correct_path-intermediate

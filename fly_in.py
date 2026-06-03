@@ -65,6 +65,8 @@ def main() -> None:
     parser = Parser()
     config = parser.parsing_config()
 
+    no_render = config.get("no_render", False)
+
     nb_drones = get_drones_nb(config)
     graph = Graph(config)
 
@@ -92,7 +94,13 @@ def main() -> None:
     zones = graph.get_all_zones()
     connections = graph.build_connection_dict()
     render = Render(zones, connections, graph, drones, simulator)
-    render.play()
+
+    if no_render:
+        while not simulator.is_all_delivered():
+            simulator.play()
+    else:
+        render.play()
+    
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 import os
-import warnings
 from typing import List
 from drone import Drone
 from graph import Graph
@@ -7,7 +6,6 @@ from simulator import Simulator
 from zone import Zone
 import pygame
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
-warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 class Render:

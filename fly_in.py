@@ -1,4 +1,3 @@
-from connection import Connection
 from drone import Drone
 from graph import Graph
 from parsing import Parser
@@ -17,28 +16,6 @@ def assign_path_to_drone(nb_drones: int, all_paths: List) -> List:
         drones = []
         selected_paths = all_paths[:2] if len(all_paths) >= 2 \
             else all_paths
-
-        # for i, p in enumerate(selected_paths, 1):
-        for i, p in enumerate(selected_paths, 1):
-            path = p["path"]
-            cost = p["cost"]
-
-            lst = []
-            for v in path:
-                # Skip Connection objects
-                if isinstance(v, Connection):
-                    continue
-
-                # Check priority
-                if v.is_zone_priority():
-                    # Yellow with star
-                    lst.append(f"\033[93m★ {v.name}\033[0m")
-                else:
-                    # Green
-                    lst.append(f"\033[92m{v.name}\033[0m")
-
-            print(f"Path {i}: {' >> '.join(lst)}")
-            print(f"Cost: {cost}\n")
 
         for i in range(nb_drones):
             path = selected_paths[i % len(selected_paths)]["path"]
@@ -100,7 +77,6 @@ def main() -> None:
             simulator.play()
     else:
         render.play()
-    
 
 
 if __name__ == "__main__":

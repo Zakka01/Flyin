@@ -99,8 +99,6 @@ The project is based on Weighted BFS algorithm.
 
 ## Multi-Path Strategy
 
-The number of paths depends on the number of drones (`nb_drones`).
-
 The system:
 
 - Generates several alternatives
@@ -222,7 +220,7 @@ AI tools were used as development assistants for:
 
 ### Debugging
 
-* Resolving runtime and MyPy errors
+* Resolving runtime and Flake8 & MyPy errors
 * Understanding pdb debugging workflows
 
 ### Concept Explanations

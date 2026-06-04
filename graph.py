@@ -93,9 +93,6 @@ class Graph:
 
         while queue:
             current_zone, path_so_far = queue.popleft()
-            print(
-                f"Queue: {current_zone.name}, {[p.name for p in path_so_far]}"
-            )  # for debuging
 
             # build path when current is end and continue find other paths
             if current_zone.name == self.end_hub.name:

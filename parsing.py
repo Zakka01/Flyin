@@ -1,6 +1,6 @@
 import sys
+from typing import Any, List
 import webcolors
-from typing import Any
 
 
 class Parser:
@@ -9,94 +9,187 @@ class Parser:
         self.connection_hubs: list = []
 
     def parse_connection(self, value: str) -> dict:
+        value = value.strip()
+
         max_link_capacity = 1
+        metadata = None
 
-        if "[" in value:
-            dist, metadata = value.strip().split(" ", 1)
-            metadata = metadata.strip()
+        # Extract metadata
+        if "[" in value or "]" in value:
+            if value.count("[") != 1 or value.count("]") != 1:
+                raise ValueError("Invalid metadata format for connection")
 
-            if not (metadata.startswith("[") and metadata.endswith("]")):
-                raise ValueError("Invalid metadata")
+            start = value.index("[")
+            end = value.index("]")
 
-            metadata = metadata.strip("[]").strip()
-            if "=" not in metadata:
-                raise ValueError("Invalid metadata")
+            if end < start:
+                raise ValueError("Invalid metadata format for connection")
 
-            key, value = metadata.split("=", 1)
-            if key != "max_link_capacity":
-                raise ValueError("Invalid Metadata for connection")
-            if int(value) < 0:
+            metadata = value[start + 1:end].strip()
+
+            # check junk after metadata
+            after = value[end + 1:].strip()
+            if after != "":
+                raise ValueError(f"Unexpected trailing data: '{after}'")
+
+            value = value[:start].strip()
+
+        dist = value
+
+        # Parse metadata
+        if metadata:
+
+            tokens = metadata.split("=")
+            tokens = [t.strip() for t in tokens]
+            if len(tokens) != 2 or tokens[0] != "max_link_capacity":
+                raise ValueError("Invalid metadata for connection")
+
+            key, value = tokens
+
+            try:
+                max_link_capacity = int(value)
+            except ValueError:
+                raise ValueError("max_link_capacity must be an integer")
+
+            if max_link_capacity <= 0:
                 raise ValueError("max_link_capacity must be positive")
-            max_link_capacity = int(value)
-        else:
-            dist = value
 
+        # Parse connection
         if "-" not in dist:
             raise ValueError("Invalid connection format")
-        from_dist, to_dist = dist.strip().split("-", 1)
 
-        connection = {from_dist.strip(), to_dist.strip()}
+        from_hub, to_hub = dist.split("-", 1)
+
+        from_hub = from_hub.strip()
+        to_hub = to_hub.strip()
+
+        if not from_hub or not to_hub:
+            raise ValueError("Invalid connection format")
+
+        connection = {from_hub, to_hub}
+
         if connection in self.connection_hubs:
             raise ValueError("Duplicate connection")
+
         self.connection_hubs.append(connection)
 
         return {
-            "from": from_dist.strip(),
-            "to": to_dist.strip(),
-            "max_link_capacity": max_link_capacity
+            "from": from_hub,
+            "to": to_hub,
+            "max_link_capacity": max_link_capacity,
         }
 
+    def tokenize_metadata(self, tokens: List) -> List[str]:
+        pairs = []
+
+        i = 0
+        while i < len(tokens):
+
+            if "=" in tokens[i]:
+                pairs.append(tokens[i])
+                i += 1
+
+            elif (
+                i + 2 < len(tokens)
+                and tokens[i + 1] == "="
+            ):
+                pairs.append(
+                    f"{tokens[i]}={tokens[i + 2]}"
+                )
+                i += 3
+
+            else:
+                raise ValueError(
+                    f"Invalid metadata near '{tokens[i]}'"
+                )
+
+        return pairs
+
     def parse_hub(self, value: str) -> dict:
+        value = value.strip()
+        metadata_dict: dict = {}
+        metadata = None
+
+        if "[" in value or "]" in value:
+            if value.count("[") != 1 or value.count("]") != 1:
+                raise ValueError("Invalid format")
+
+            start = value.index("[")
+            end = value.index("]")
+
+            if end < start:
+                raise ValueError("Invalid metadata format")
+
+            metadata = value[start + 1:end].strip()
+
+            # check junk after metadata
+            after = value[end + 1:].strip()
+            if after != "":
+                raise ValueError(f"Unexpected trailing data: '{after}'")
+
+            value = value[:start].strip()
+
+        # Parse: name x y
+        parts = value.split()
+
+        if len(parts) != 3:
+            raise ValueError("Hub must contain exactly: name x y")
+
+        name, x_str, y_str = parts
+
+        # Validate name
+        if "-" in name:
+            raise ValueError(f"Invalid zone name '{name}'")
+
+        # Validate coordinates
         try:
-            name, x, other = value.strip().split(maxsplit=2)
-            name, x, other = name.strip(), x.strip(), other.strip()
-        except Exception:
-            raise Exception("Invalid Config - Not enough values")
+            x = int(x_str)
+            y = int(y_str)
+        except ValueError:
+            raise ValueError("Coordinates must be integers")
 
-        if "-" in name or " " in name:
-            raise ValueError(f"Invalid zone name '{name}', "
-                             "Zone names cannot contain '-'")
+        # Parse metadata
+        if metadata:
 
-        metadata_dict = {}
-        y = None
+            tokens = metadata.split()
+            metadata_pairs = self.tokenize_metadata(tokens)
 
-        # Check if there is metadata
-        if " " in other:
-            y, metadata = other.split(" ", 1)
-            y, metadata = y.strip(), metadata.strip()
-
-            if not metadata.startswith("[") or not metadata.endswith("]"):
-                raise ValueError(f"Invalid Metadata '{metadata}'")
-
-            if "=" not in metadata:
-                raise ValueError("Invalid Metadata format")
-
-            metadata = metadata.strip("[]")
-            pairs = metadata.split()
-
-            for pair in pairs:
-                # validate metadata format
+            for pair in metadata_pairs:
                 if "=" not in pair:
-                    raise ValueError("Invalid Metadata format")
+                    raise ValueError(f"Invalid metadata '{pair}'")
+
                 key, value = pair.split("=", 1)
 
-                # validate metadata keys
-                if key not in ["zone", "color", "max_drones"]:
-                    raise ValueError(f"Invalid Metadata Key '{key}'")
+                if key not in ("zone", "color", "max_drones"):
+                    raise ValueError(f"Invalid metadata key '{key}'")
 
                 # validate max_drones
                 if key == "max_drones":
-                    if int(value) <= 0:
-                        raise ValueError("max_drones must "
-                                         "be a positive integer")
+                    try:
+                        max_drones = int(value)
+                    except ValueError:
+                        raise ValueError("max_drones must be an integer")
 
-                # validate zone type
+                    if max_drones <= 0:
+                        raise ValueError("max_drones must be positive")
+
+                    if key in metadata_dict:
+                        raise ValueError(f"Duplicate metadata key '{key}'")
+
+                    metadata_dict[key] = max_drones
+
+                # validate zone
                 if key == "zone":
                     if value not in ["normal",
                                      "priority",
                                      "restricted",
                                      "blocked"]:
                         raise ValueError(f"Invalid zone type '{value}'")
+
+                    if key in metadata_dict:
+                        raise ValueError(f"Duplicate metadata key '{key}'")
+
+                    metadata_dict[key] = value
 
                 # validate color
                 if key == "color":
@@ -105,35 +198,31 @@ class Parser:
                     except ValueError:
                         hex_code = None
                     value = hex_code
-                metadata_dict[key] = value
 
-        else:
-            y = other
+                    if key in metadata_dict:
+                        raise ValueError(f"Duplicate metadata key '{key}'")
+
+                    metadata_dict[key] = value
 
         return {
             "name": name,
-            "x": int(x),
-            "y": int(y),
-            "color": metadata_dict["color"]
-            if "color" in metadata_dict else "white",
-
-            "zone": metadata_dict["zone"]
-            if "zone" in metadata_dict else "normal",
-
-            "max_drones": int(metadata_dict["max_drones"])
-            if "max_drones" in metadata_dict else 1
+            "x": x,
+            "y": y,
+            "color": metadata_dict.get("color", "white"),
+            "zone": metadata_dict.get("zone", "normal"),
+            "max_drones": metadata_dict.get("max_drones", 1),
         }
 
     def validate_config(self, config: dict) -> dict:
         try:
-
             parsed_config: dict[str, Any] = {}
             for key, value in config.items():
-
                 if key == "nb_drones":
                     if int(value) <= 0:
-                        raise ValueError(f"{key} must be a positive_integer "
-                                         "and greater than 0")
+                        raise ValueError(
+                            f"{key} must be a positive_integer "
+                            "and greater than 0"
+                        )
                     parsed_config[key] = int(value)
 
                 elif key in ["start_hub", "end_hub"]:
@@ -141,8 +230,10 @@ class Parser:
 
                 elif key == "hub":
                     for v in value:
-                        parsed_config["hub"] = \
-                            [self.parse_hub(v) for v in value]
+                        parsed_config["hub"] = [
+                            self.parse_hub(v)
+                            for v in value
+                        ]
 
                 elif key == "connection":
                     if key not in parsed_config:
@@ -185,19 +276,11 @@ class Parser:
 
         try:
             config = self.config
-            mandatory_keys = [
-                "nb_drones",
-                "start_hub",
-                "end_hub"
-            ]
-            extra_keys = [
-                "hub",
-                "connection"
-            ]
+            mandatory_keys = ["nb_drones", "start_hub", "end_hub"]
+            extra_keys = ["hub", "connection"]
 
             filename = None
             no_render = False
-            capacity_info = False
 
             for arg in sys.argv[1:]:
                 if arg == "--no-render":
@@ -224,10 +307,12 @@ class Parser:
                         continue
 
                     # if nb_drones is not the first line
-                    elif not line.startswith("nb_drones") and \
-                            first_line is True:
-                        raise ValueError("The first line "
-                                            "must be 'nb_drones'")
+                    elif (
+                            not line.startswith("nb_drones")
+                            and first_line is True
+                    ):
+                        raise ValueError("The first line must "
+                                         "be 'nb_drones'")
 
                     # if there is no colon in the line
                     elif ":" not in line:
@@ -243,12 +328,10 @@ class Parser:
 
                         # if key is duplicated
                         if key in mandatory_keys and key in config:
-                            raise ValueError(f"{key} should not "
-                                                "be duplicated")
+                            raise ValueError(f"{key} should not be duplicated")
 
                         # if key is not a mandatory or extra key
-                        if key not in mandatory_keys and \
-                            key not in extra_keys:
+                        if key not in mandatory_keys and key not in extra_keys:
                             raise ValueError(f"Key: '{key}' is not Valid")
 
                         # if key has a comment
@@ -265,7 +348,6 @@ class Parser:
                                 config[key] = []
                             config[key].append(value)
                     first_line = False
-
 
             if (
                 "nb_drones" not in config
@@ -287,4 +369,5 @@ class Parser:
             print(f"ERROR: {e}")
             sys.exit(0)
 
+        # print(valid_config)
         return valid_config

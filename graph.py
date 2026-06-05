@@ -1,6 +1,5 @@
 from collections import deque
 from typing import List, Any
-
 from connection import Connection
 from zone import Zone
 

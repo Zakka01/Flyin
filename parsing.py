@@ -369,5 +369,4 @@ class Parser:
             print(f"ERROR: {e}")
             sys.exit(0)
 
-        # print(valid_config)
         return valid_config

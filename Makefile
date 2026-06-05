@@ -6,7 +6,7 @@ install:
 	python3 -m venv v
 
 run :
-	@$(PYTHON) $(MAIN) --no-render $(CONFIG)
+	@$(PYTHON) $(MAIN) $(CONFIG)
 
 debug:
 	$(PYTHON) -m pdb $(MAIN)

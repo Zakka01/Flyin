@@ -40,6 +40,7 @@ class Simulator:
             dst_name = dst.name
             current_zone = move["drone"].current_zone()
 
+            # for the current zone
             if isinstance(current_zone, Zone):
                 conn_info = self.get_connection(current_zone, dst)
                 connection_capacity = conn_info["connection_capacity"]
@@ -50,7 +51,7 @@ class Simulator:
                 connection_capacity = current_zone.max_capacity
                 connection_name = current_zone.name
 
-            # get max capacity of destination
+            # for the destination
             if isinstance(dst, Connection):
                 max_capacity = dst.max_capacity
             else:

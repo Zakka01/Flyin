@@ -51,8 +51,8 @@ class Graph:
                 raise ValueError("Can't have two duplicated zones name")
             if dups_coors:
                 raise ValueError(
-                    "Can't have two zones with \
-                    the same Coordinates"
+                    "Can't have two zones with "
+                    "the same Coordinates"
                 )
 
         except ValueError as e:

@@ -1,15 +1,11 @@
-PYTHON = python3
-MAIN = fly_in.py
-CONFIG = config.txt
-
 install:
-	python3 -m venv v
+	pip install -r requirements.txt
 
 run :
-	@$(PYTHON) $(MAIN) $(CONFIG)
+	python3 fly_in.py --no-render config.txt
 
 debug:
-	$(PYTHON) -m pdb $(MAIN)
+	python3 -m pdb fly_in.py
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

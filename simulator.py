@@ -29,51 +29,58 @@ class Simulator:
 
     def validate_moves(self, drones_moves: List) -> List[dict]:
         valid_moves = []
-        dst_count: dict = defaultdict(int)
-        connection_count: dict = defaultdict(int)
 
-        # sort moves by drone id to ensure consistent order
+        planned_enters = defaultdict(int)
+        planned_leaves = defaultdict(int)
+        connection_count = defaultdict(int)
+
         drones_moves.sort(key=lambda m: int(m["drone"].id[1:]))
 
         for move in drones_moves:
             dst = move["dst"]
-            dst_name = dst.name
-            current_zone = move["drone"].current_zone()
+            current = move["current"]
 
-            # for the current zone
-            if isinstance(current_zone, Zone):
-                conn_info = self.get_connection(current_zone, dst)
-                connection_capacity = conn_info["connection_capacity"]
-                connection_name = (
-                    conn_info["from"].name + "-" + conn_info["to"].name
+            if isinstance(current, Zone):
+                conn_info = self.get_connection(
+                    current,
+                    dst if not isinstance(dst, Connection) else dst.to_dst,
                 )
-            else:
-                connection_capacity = current_zone.max_capacity
-                connection_name = current_zone.name
+                connection_name = (
+                    conn_info["from"].name
+                    + "-"
+                    + conn_info["to"].name
+                )
+                connection_capacity = conn_info["connection_capacity"]
 
-            # for the destination
+            else:
+                connection_name = current.name
+                connection_capacity = current.max_capacity
+
             if isinstance(dst, Connection):
-                max_capacity = dst.max_capacity
+                destination = dst.to_dst
             else:
-                max_capacity = dst.max_drones
+                destination = dst
 
-            # calculate available slots
-            drone_leaving = 0
-            if current_zone != dst:
-                drone_leaving += 1
+            future_occupancy = (
+                destination.drone_in
+                - planned_leaves[destination.name]
+                + planned_enters[destination.name]
+                + 1
+            )
 
-            current_capacity = dst.drone_in
-            available_slots = max_capacity - current_capacity + drone_leaving
+            if future_occupancy > destination.max_drones:
+                continue
 
-            # check if move is valid
-            if (
-                dst_count[dst_name] < available_slots
-                and connection_count[connection_name] < connection_capacity
-                and connection_count[connection_name] < max_capacity
-            ):
-                valid_moves.append(move)
-                dst_count[dst_name] += 1
-                connection_count[connection_name] += 1
+            if connection_count[connection_name] >= connection_capacity:
+                continue
+
+            valid_moves.append(move)
+
+            planned_enters[destination.name] += 1
+            connection_count[connection_name] += 1
+
+            if isinstance(current, Zone):
+                planned_leaves[current.name] += 1
 
         return valid_moves
 

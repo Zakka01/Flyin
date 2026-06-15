@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by zahrabar.*
+*This project has been created by Zakka01.*
 
 # Fly-in
 
